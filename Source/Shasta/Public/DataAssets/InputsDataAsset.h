@@ -8,8 +8,20 @@
 #include "Engine/DataAsset.h"
 #include "InputsDataAsset.generated.h"
 
+USTRUCT(BlueprintType)
+struct SHASTA_API FIMCPriority
+{
+	GENERATED_BODY();
+
+	UPROPERTY(EditAnywhere)
+	TObjectPtr<UInputMappingContext> InputMappingContext;
+
+	UPROPERTY(EditAnywhere)
+	int32 DefaultPriority;
+};
+
 /**
- * 
+ *
  */
 UCLASS()
 class SHASTA_API UInputsDataAsset : public UDataAsset
@@ -21,7 +33,7 @@ private:
 	TMap<FName, TObjectPtr<UInputAction>> InputActionsMap;
 
 	UPROPERTY(EditAnywhere, BlueprintGetter = GetInputMappingContextsMap)
-	TMap<FName, TObjectPtr<UInputMappingContext>> InputMappingContextsMap;
+	TMap<FName, FIMCPriority> InputMappingContextsMap;
 
 public:
 	UFUNCTION(BlueprintCallable, BlueprintPure)
@@ -36,13 +48,8 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
-	TMap<FName, UInputMappingContext*> GetInputMappingContextsMap()
+	const TMap<FName, FIMCPriority>& GetInputMappingContextsMap()
 	{
-		TMap<FName, UInputMappingContext*> retMap;
-		retMap.Reserve(InputMappingContextsMap.Num());
-		for (auto& pair : InputMappingContextsMap)
-			retMap.Add(pair.Key, pair.Value);
-
-		return retMap;
+		return InputMappingContextsMap;
 	}
 };
