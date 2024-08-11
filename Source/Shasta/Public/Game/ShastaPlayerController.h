@@ -38,6 +38,8 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void EndPlay(EEndPlayReason::Type InReason) override;
 
+	virtual void BindActions();
+
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UInputsDataAsset* GetInputsDataAsset() const;
 
@@ -45,12 +47,21 @@ private:
 	void SetupInputMappingContext();
 	virtual void SetupInputComponent() override;
 
-	UFUNCTION(BlueprintCallable)
-	void MovementCallback(const FVector& InDirection) const;
+	UFUNCTION()
+	void MovementCallback(const FInputActionInstance& InputInstance);
 
-	UFUNCTION(BlueprintCallable)
-	void CameraRotationCallback(const FVector2D& InDirection) const;
+	UFUNCTION()
+	void CameraRotationCallback(const FInputActionInstance& InputInstance);
 
-	UFUNCTION(BlueprintCallable)
-	void FOVCallback(float InDelta) const;
+	UFUNCTION()
+	void FOVCallback(const FInputActionInstance& InputInstance);
+
+	UFUNCTION()
+	void SelectCallback(const FInputActionInstance& InputInstance);
+
+	UFUNCTION()
+	void ContextualCallback(const FInputActionInstance& InputInstance);
+
+	UFUNCTION()
+	void CancelCallback(const FInputActionInstance& InputInstance);
 };

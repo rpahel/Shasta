@@ -4,7 +4,9 @@
 #include "Game/ShastaPlayerController.h"
 #include "DataAssets/InputsDataAsset.h"
 
+#include "InputAction.h"
 #include "EnhancedInputSubsystems.h"
+#include "EnhancedInputComponent.h"
 #include "Logging/StructuredLog.h"
 
 UInputMappingContext* AShastaPlayerController::AddMappingContext(const FName& InIMCName, int32 InPriority)
@@ -40,6 +42,49 @@ void AShastaPlayerController::EndPlay(EEndPlayReason::Type InReason)
 	UE_LOGFMT(LogTemp, Warning, "AShastaPlayerController::EndPlay()");
 }
 
+void AShastaPlayerController::BindActions()
+{
+	if(!InputsDataAsset)
+		return;
+
+	UEnhancedInputComponent* EIC = Cast<UEnhancedInputComponent>(InputComponent);
+
+	if (!EIC)
+		return;
+
+	auto& inputActionsMap = InputsDataAsset->GetInputActionsMap();
+
+	if (auto action = inputActionsMap.FindRef("Movement"))
+	{
+		EIC->BindAction(action, ETriggerEvent::Triggered, this, &AShastaPlayerController::MovementCallback);
+	}
+
+	if (auto action = inputActionsMap.FindRef("Camera"))
+	{
+		EIC->BindAction(action, ETriggerEvent::Triggered, this, &AShastaPlayerController::CameraRotationCallback);
+	}
+
+	if (auto action = inputActionsMap.FindRef("FOV"))
+	{
+		EIC->BindAction(action, ETriggerEvent::Triggered, this, &AShastaPlayerController::FOVCallback);
+	}
+
+	if (auto action = inputActionsMap.FindRef("Select"))
+	{
+		EIC->BindAction(action, ETriggerEvent::Completed, this, &AShastaPlayerController::SelectCallback);
+	}
+
+	if (auto action = inputActionsMap.FindRef("Contextual"))
+	{
+		EIC->BindAction(action, ETriggerEvent::Completed, this, &AShastaPlayerController::ContextualCallback);
+	}
+
+	if (auto action = inputActionsMap.FindRef("Cancel"))
+	{
+		EIC->BindAction(action, ETriggerEvent::Completed, this, &AShastaPlayerController::CancelCallback);
+	}
+}
+
 UInputsDataAsset* AShastaPlayerController::GetInputsDataAsset() const
 {
 	return InputsDataAsset;
@@ -50,6 +95,7 @@ void AShastaPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 	UE_LOGFMT(LogTemp, Warning, "AShastaPlayerController::SetupInputComponent()");
 	SetupInputMappingContext();
+	BindActions();
 }
 
 void AShastaPlayerController::SetupInputMappingContext()
@@ -66,17 +112,35 @@ void AShastaPlayerController::SetupInputMappingContext()
 	AddMappingContext("Default");
 }
 
-void AShastaPlayerController::MovementCallback(const FVector& InDirection) const
+void AShastaPlayerController::MovementCallback(const FInputActionInstance& InputInstance)
 {
-	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::MovementCallback : {0}", InDirection.ToString());
+	FVector inputValue = InputInstance.GetValue().Get<FVector>();
+	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::MovementCallback : {0}", inputValue.ToString());
 }
 
-void AShastaPlayerController::CameraRotationCallback(const FVector2D& InDirection) const
+void AShastaPlayerController::CameraRotationCallback(const FInputActionInstance& InputInstance)
 {
-	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::CameraRotationCallback : {0}", InDirection.ToString());
+	FVector2D inputValue = InputInstance.GetValue().Get<FVector2D>();
+	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::CameraRotationCallback : {0}", inputValue.ToString());
 }
 
-void AShastaPlayerController::FOVCallback(float InDelta) const
+void AShastaPlayerController::FOVCallback(const FInputActionInstance& InputInstance)
 {
-	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::FOVCallback : {0}", InDelta);
+	float inputValue = InputInstance.GetValue().Get<float>();
+	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::FOVCallback : {0}", inputValue);
+}
+
+void AShastaPlayerController::SelectCallback(const FInputActionInstance& InputInstance)
+{
+	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::SelectCallback");
+}
+
+void AShastaPlayerController::ContextualCallback(const FInputActionInstance& InputInstance)
+{
+	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::ContextualCallback");
+}
+
+void AShastaPlayerController::CancelCallback(const FInputActionInstance& InputInstance)
+{
+	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::CancelCallback");
 }

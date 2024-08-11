@@ -29,25 +29,18 @@ class SHASTA_API UInputsDataAsset : public UDataAsset
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere, BlueprintGetter = GetInputActionsMap)
+	UPROPERTY(EditAnywhere)
 	TMap<FName, TObjectPtr<UInputAction>> InputActionsMap;
 
-	UPROPERTY(EditAnywhere, BlueprintGetter = GetInputMappingContextsMap)
+	UPROPERTY(EditAnywhere)
 	TMap<FName, FIMCPriority> InputMappingContextsMap;
 
 public:
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	TMap<FName, UInputAction*> GetInputActionsMap()
+	const TMap<FName, TObjectPtr<UInputAction>>& GetInputActionsMap()
 	{
-		TMap<FName, UInputAction*> retMap;
-		retMap.Reserve(InputActionsMap.Num());
-		for (auto& pair : InputActionsMap)
-			retMap.Add(pair.Key, pair.Value);
-
-		return retMap;
+		return InputActionsMap;
 	}
 
-	UFUNCTION(BlueprintCallable, BlueprintPure)
 	const TMap<FName, FIMCPriority>& GetInputMappingContextsMap()
 	{
 		return InputMappingContextsMap;
