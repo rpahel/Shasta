@@ -39,7 +39,9 @@ void AShastaPlayerController::BeginPlay()
 
 void AShastaPlayerController::EndPlay(EEndPlayReason::Type InReason)
 {
-	UE_LOGFMT(LogTemp, Warning, "AShastaPlayerController::EndPlay()");
+	OnMoveDelegate.Clear();
+	OnRotateDelegate.Clear();
+	OnFOVChangeDelegate.Clear();
 }
 
 void AShastaPlayerController::BindActions()
@@ -115,19 +117,19 @@ void AShastaPlayerController::SetupInputMappingContext()
 void AShastaPlayerController::MovementCallback(const FInputActionInstance& InputInstance)
 {
 	FVector inputValue = InputInstance.GetValue().Get<FVector>();
-	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::MovementCallback : {0}", inputValue.ToString());
+	OnMoveDelegate.Broadcast(inputValue);
 }
 
 void AShastaPlayerController::CameraRotationCallback(const FInputActionInstance& InputInstance)
 {
 	FVector2D inputValue = InputInstance.GetValue().Get<FVector2D>();
-	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::CameraRotationCallback : {0}", inputValue.ToString());
+	OnRotateDelegate.Broadcast(inputValue * CameraSensitivity);
 }
 
 void AShastaPlayerController::FOVCallback(const FInputActionInstance& InputInstance)
 {
 	float inputValue = InputInstance.GetValue().Get<float>();
-	UE_LOGFMT(LogTemp, Log, "AShastaPlayerController::FOVCallback : {0}", inputValue);
+	OnFOVChangeDelegate.Broadcast(inputValue);
 }
 
 void AShastaPlayerController::SelectCallback(const FInputActionInstance& InputInstance)
