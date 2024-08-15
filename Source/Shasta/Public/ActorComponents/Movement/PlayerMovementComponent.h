@@ -9,7 +9,7 @@
 #include "PlayerMovementComponent.generated.h"
 
 UCLASS(
-	ClassGroup = ("Shasta Movement"),
+	ClassGroup = ("Shasta"),
 	meta = (BlueprintSpawnableComponent),
 	AutoExpandCategories = ("Shasta|Movement"),
 	meta = (ShortTooltip = "To be filled.")

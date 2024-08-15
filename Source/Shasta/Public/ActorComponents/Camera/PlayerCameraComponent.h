@@ -12,7 +12,7 @@
  * 
  */
 UCLASS(
-	ClassGroup = ("Shasta Camera"),
+	ClassGroup = ("Shasta"),
 	meta = (BlueprintSpawnableComponent),
 	AutoExpandCategories = ("Shasta|PlayerCamera"),
 	meta = (ShortTooltip = "To be filled.")
