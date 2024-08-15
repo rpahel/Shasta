@@ -2,53 +2,37 @@
 
 #pragma once
 
+#include "Interfaces/InputsDependentInterface.h"
+
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "ShastaPlayerPawn.generated.h"
 
-class UFloatingPawnMovement;
+class UPlayerMovementComponent;
 class USphereComponent;
-class UCameraComponent;
+class UPlayerCameraComponent;
 
 UCLASS()
-class SHASTA_API AShastaPlayerPawn : public APawn
+class SHASTA_API AShastaPlayerPawn : public APawn, public IInputsDependentInterface
 {
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Shasta|Movement")
-	FVector2D MinMaxPitch = FVector2D(-89, 89);
-
-	UPROPERTY(EditAnywhere, Category = "Shasta|Movement")
-	FVector2D MinMaxAltitude = FVector2D(100, 500);
-
-	UPROPERTY(EditAnywhere, Category = "Shasta|Camera")
-	FVector2D MinMaxFov = FVector2D(70, 100);
-
 	//==== Components ====
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UFloatingPawnMovement> MovementComponent;
-
-	UPROPERTY(VisibleAnywhere)
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
 	TObjectPtr<USphereComponent> Collider;
 
-	UPROPERTY(VisibleAnywhere)
-	TObjectPtr<UCameraComponent> Camera;
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
+	TObjectPtr<UPlayerCameraComponent> Camera;
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
+	TObjectPtr<UPlayerMovementComponent> PlayerMovement;
 
 public:
 	AShastaPlayerPawn();
 
-private:
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
+	//==== IInputsDependent Implementation ====
 
-	UFUNCTION()
-	void MoveCallback(const FVector& InputDirection);
-
-	UFUNCTION()
-	void RotateCallback(const FVector2D& InputDirection);
-
-	UFUNCTION()
-	void FOVChangeCallback(float InputFovDelta);
+	virtual void BindInputActions(UEnhancedInputComponent* InInputComponent) override;
 };
