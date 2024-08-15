@@ -3,7 +3,6 @@
 
 #include "Game/ShastaPlayerController.h"
 #include "Actors/Pawns/ShastaPlayerPawn.h"
-#include "DataAssets/InputsDataAsset.h"
 
 #include "InputAction.h"
 #include "EnhancedInputSubsystems.h"

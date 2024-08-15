@@ -1,7 +1,7 @@
 // Copyright (c) 2024, Raphael Coimbra, Killian Diakouka. All rights reserved.
 
 
-#include "ActorComponents/ShastaMovementComponent.h"
+#include "ActorComponents/Movement/ShastaMovementComponent.h"
 #include "Game/ShastaPlayerController.h"
 
 //====================================================================================

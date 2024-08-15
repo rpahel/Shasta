@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 
-#include "Shasta/Public/ActorComponents/PlayerMovementComponent.h"
+#include "ActorComponents/Movement/PlayerMovementComponent.h"
 
 //====================================================================================
 //==== IINPUTSDEPENDENT IMPLEMENTATION
@@ -75,7 +75,7 @@ void UPlayerMovementComponent::MoveCompletedCallback(const FInputActionInstance&
 
 void UPlayerMovementComponent::RotationCallback(const FInputActionInstance& InputInstance)
 {
-	const FVector2D inputDirection = InputInstance.GetValue().Get<FVector2D>();
+	const FVector2D inputDirection = InputInstance.GetValue().Get<FVector2D>() * RotationSensitivity;
 	FRotator rot = GetOwner()->GetActorRotation();
 	rot.Yaw += inputDirection.X;
 	rot.Pitch = FMath::Clamp(rot.Pitch + inputDirection.Y, MinMaxPitch.X, MinMaxPitch.Y);

@@ -2,14 +2,14 @@
 
 #pragma once
 
-#include "Shasta/Public/ActorComponents/ShastaMovementComponent.h"
-#include "Shasta/Public/Interfaces/InputsDependentInterface.h"
+#include "ActorComponents/Movement/ShastaMovementComponent.h"
+#include "Interfaces/InputsDependentInterface.h"
 
 #include "CoreMinimal.h"
 #include "PlayerMovementComponent.generated.h"
 
 UCLASS(
-	ClassGroup = (ShastaComponents),
+	ClassGroup = ("Shasta Movement"),
 	meta = (BlueprintSpawnableComponent),
 	AutoExpandCategories = ("Shasta|Movement"),
 	meta = (ShortTooltip = "To be filled.")
@@ -26,6 +26,9 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|Movement")
 	FVector2D MinMaxAltitude = FVector2D(100, 500);
+
+	UPROPERTY(EditAnywhere, meta=(ClampMin = 0), Category = "Shasta|Movement|Inputs")
+	float RotationSensitivity = 1;
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|Movement|Inputs")
 	TObjectPtr<UInputAction> MoveInputAction = nullptr;

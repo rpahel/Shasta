@@ -10,7 +10,7 @@
 
 class UPlayerMovementComponent;
 class USphereComponent;
-class UCameraComponent;
+class UPlayerCameraComponent;
 
 UCLASS()
 class SHASTA_API AShastaPlayerPawn : public APawn, public IInputsDependentInterface
@@ -18,16 +18,13 @@ class SHASTA_API AShastaPlayerPawn : public APawn, public IInputsDependentInterf
 	GENERATED_BODY()
 
 private:
-	UPROPERTY(EditAnywhere, Category = "Shasta|Camera")
-	FVector2D MinMaxFov = FVector2D(70, 100);
-
 	//==== Components ====
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
 	TObjectPtr<USphereComponent> Collider;
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
-	TObjectPtr<UCameraComponent> Camera;
+	TObjectPtr<UPlayerCameraComponent> Camera;
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
 	TObjectPtr<UPlayerMovementComponent> PlayerMovement;
@@ -38,8 +35,4 @@ public:
 	//==== IInputsDependent Implementation ====
 
 	virtual void BindInputActions(UEnhancedInputComponent* InInputComponent) override;
-
-private:
-	UFUNCTION()
-	void FOVChangeCallback(float InputFovDelta);
 };
