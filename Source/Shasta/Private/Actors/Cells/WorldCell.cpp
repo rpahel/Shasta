@@ -37,8 +37,31 @@ AWorldCell::AWorldCell()
 //==== PUBLIC METHODS
 //====================================================================================
 
+#if WITH_EDITOR
+void AWorldCell::PingNeighbors()
+{
+	for (auto& pair : Neighbors)
+	{
+		if (!pair.Value)
+			continue;
+
+		DrawDebugPoint(
+			GetWorld(),
+			pair.Value->GetActorLocation(),
+			25,
+			FColor::Red,
+			false,
+			3,
+			10
+		);
+	}
+}
+#endif
+
 void AWorldCell::GenerateNeighbors()
 {
+	TArray<TPair<FIntPoint, TObjectPtr<AWorldCell>>> generatedCells;
+
 	// Generating neighbors in empty spots
 	FActorSpawnParameters spawnParams;
 	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
@@ -53,6 +76,8 @@ void AWorldCell::GenerateNeighbors()
 			spawnParams
 		);
 
+		generatedCells.Add(pair);
+
 		if (!pair.Value)
 		{
 			UE_LOGFMT(LogTemp, Warning, "{0} : Could not generate neighbour at {1}", GetName(), pair.Key.ToString());
@@ -60,14 +85,21 @@ void AWorldCell::GenerateNeighbors()
 		}
 	}
 
+	UE_LOGFMT(LogTemp, Log, "{0}->GenerateCells() : Generated {1} cells.", GetName(), generatedCells.Num());
+
 	// Declare self as neighbor
-	for (auto& pair : Neighbors)
+	for (auto& pair : generatedCells)
 	{
 		if (!pair.Value)
 			continue;
 
-		pair.Value->MeetNeighbor(this, FIntPoint((pair.Key.X + 180) % 360, ((pair.Key.Y + 180) == 360 ? 360 : (pair.Key.Y + 180) % 360))); // Opposite Sector
+		pair.Value->IntroduceAsNeighbor(this, GetOppositeSector(pair.Key)); // Opposite Sector
 	}
+}
+
+float AWorldCell::GetCellRadius() const
+{
+	return CellRadius;
 }
 
 void AWorldCell::Init(AWorldCell* parentCell)
@@ -88,10 +120,25 @@ const TMap<FIntPoint, TObjectPtr<AWorldCell>>& AWorldCell::GetNeighbors() const
 	return Neighbors;
 }
 
-float AWorldCell::GetCellRadius() const
+//====================================================================================
+//==== PUBLIC STATIC METHODS
+//====================================================================================
+
+FIntPoint AWorldCell::GetOppositeSector(const FIntPoint& Sector)
 {
-	return CellRadius;
+	return FIntPoint((Sector.X + 180) % 360, ((Sector.Y + 180) == 360 ? 360 : (Sector.Y + 180) % 360));
 }
+
+FIntPoint AWorldCell::GetAdjacentSectorCounterClockwise(const FIntPoint& Sector)
+{
+	return FIntPoint(Sector.X == 0 ? 300 : Sector.X - 60, Sector.Y == 60 ? 360 : Sector.Y - 60);
+}
+
+FIntPoint AWorldCell::GetAdjacentSectorClockwise(const FIntPoint& Sector)
+{
+	return FIntPoint(Sector.X == 300 ? 0 : Sector.X + 60, Sector.Y == 360 ? 60 : Sector.Y + 60);
+}
+
 
 //====================================================================================
 //==== PRIVATE OVERRIDES
@@ -103,6 +150,17 @@ void AWorldCell::BeginPlay()
 	{
 		FColor colorA(FColor::MakeRandomColor());
 		FColor colorB(FColor::MakeRandomColor());
+
+		DrawDebugPoint(
+			GetWorld(),
+			GetActorLocation(),
+			25,
+			colorA,
+			false,
+			3,
+			10
+		);
+
 		for (auto& neighbor : Neighbors)
 		{
 			DrawDebugLine(
@@ -149,21 +207,53 @@ void AWorldCell::SetDistanceFromCenter(int Distance)
 	DistanceFromCenter = Distance;
 }
 
-void AWorldCell::MeetNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector)
+void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector)
 {
+	if(!NeighborCell)
+		return;
+
 	TObjectPtr<AWorldCell>* neighborPtr = Neighbors.Find(NeighborSector);
 
-	if (!neighborPtr->IsNull())
+	if (!neighborPtr->IsNull() && *neighborPtr != NeighborCell)
 	{
-		UE_LOGFMT(LogTemp, Log, "{0}->MeetNeighbor() : There is already a neighbor registered to sector {1}.", GetName(), NeighborSector.ToString());
-
-		if(*neighborPtr != NeighborCell)
-			UE_LOGFMT(LogTemp, Error, "{0}->MeetNeighbor() : The incoming {1} neighbor is different from the already present neighbor !", GetName(), NeighborSector.ToString());
-
+		UE_LOGFMT(LogTemp, Error, "{0}->IntroduceAsNeighbor() : The incoming {1} neighbor is different from the already present neighbor !", GetName(), NeighborSector.ToString());
 		return;
 	}
 
 	*neighborPtr = NeighborCell;
+
+	// Add neighbor's neighbors that are adjacent to me to my neighbors
+	const FIntPoint oppSector = GetOppositeSector(NeighborSector); // My sector relative to NeighborCell
+
+	if (auto ptr_a = NeighborCell->Neighbors.Find(GetAdjacentSectorCounterClockwise(oppSector)))
+	{
+		if (auto ptr_b = Neighbors.Find(GetAdjacentSectorClockwise(NeighborSector)))
+		{
+			if (ptr_b->IsNull())
+			{
+				if ((*ptr_b = *ptr_a) != nullptr)
+				{
+					(*ptr_b)->IntroduceAsNeighbor(this, GetOppositeSector(GetAdjacentSectorClockwise(NeighborSector)));
+				}
+			}
+		}
+	}
+
+	if (auto ptr_a = NeighborCell->Neighbors.Find(GetAdjacentSectorClockwise(oppSector)))
+	{
+		if (auto ptr_b = Neighbors.Find(GetAdjacentSectorCounterClockwise(NeighborSector)))
+		{
+			if (ptr_b->IsNull())
+			{
+				if ((*ptr_b = *ptr_a) != nullptr)
+				{
+					(*ptr_b)->IntroduceAsNeighbor(this, GetOppositeSector(GetAdjacentSectorCounterClockwise(NeighborSector)));
+				}
+			}
+		}
+	}
+
+	// Ajouter une verification pour les secteurs vides pour etre sur qu'il n'y a pas de cases voisines
 }
 
 UStaticMeshComponent* AWorldCell::GetDissolverShape() const

@@ -103,6 +103,11 @@ public:
 
 	//==== Methods ====
 
+#if WITH_EDITOR
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	void PingNeighbors();
+#endif
+
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void GenerateNeighbors();
 
@@ -113,6 +118,12 @@ public:
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
 
+	//==== Static Methods ====
+
+	static FIntPoint GetOppositeSector(const FIntPoint& Sector);
+	static FIntPoint GetAdjacentSectorCounterClockwise(const FIntPoint& Sector);
+	static FIntPoint GetAdjacentSectorClockwise(const FIntPoint& Sector);
+
 private:
 	//==== Overrides ====
 
@@ -121,7 +132,7 @@ private:
 	//==== Methods ====
 
 	void SetDistanceFromCenter(int Distance);
-	void MeetNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
+	void IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UStaticMeshComponent* GetDissolverShape() const;
