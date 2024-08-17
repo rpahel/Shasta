@@ -10,7 +10,7 @@ UENUM()
 enum class EShastaPathType : uint8
 {
 	None = 0,
-	Normal = 1,
+	Ground = 1,
 	Aerial = 2,
 	Narrow = 3,
 	Climbable = 4

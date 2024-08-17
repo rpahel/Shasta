@@ -9,7 +9,8 @@
 class UCurveFloat;
 class UCurveVector;
 class UPathComponent;
-enum class EShastaPathType;
+class ACellModifier;
+enum class EShastaPathType : uint8;
 
 UENUM()
 enum class ECellType : uint8
@@ -62,12 +63,6 @@ private:
 	ECellType CellType = ECellType::None;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
-	FText CellName;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
-	TSoftObjectPtr<UMaterialInstance> CellIcon;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
 	FDissolverShapeData DissolverShapeData;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
@@ -82,6 +77,9 @@ private:
 	float CellRadius = 100;
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
+	TObjectPtr<ACellModifier> CurrentCellModifier;
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	TMap<FIntPoint, TObjectPtr<AWorldCell>> Neighbors; // Neighbors, world space, counter clockwise
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
@@ -89,8 +87,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	int32 DistanceFromCenter = 0;
-
-	TMultiMap<EShastaPathType, TObjectPtr<UPathComponent>> Paths;
 
 	//==== Components ====
 
