@@ -80,10 +80,10 @@ private:
 	TObjectPtr<ACellModifier> CurrentCellModifier;
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
-	TMap<FIntPoint, TObjectPtr<AWorldCell>> Neighbors; // Neighbors, world space, counter clockwise
+	TMap<FIntPoint, TObjectPtr<AWorldCell>> Neighbors; // Neighbors, world space, clockwise
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
-	TMap<FIntPoint, FVector> SideCenters; // local space, counter clockwise
+	TMap<FIntPoint, FVector> SideCenters; // local space, clockwise
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	int32 DistanceFromCenter = 0;
@@ -103,12 +103,15 @@ public:
 
 	//==== Methods ====
 
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	void GenerateNeighbors();
+
+	UFUNCTION(BlueprintCallable)
+	float GetCellRadius() const;
+
 	void Init(AWorldCell* parentCell);
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
-
-	UFUNCTION(CallInEditor, Category = "Shasta")
-	void GenerateNeighbors();
 
 private:
 	//==== Overrides ====
@@ -118,6 +121,7 @@ private:
 	//==== Methods ====
 
 	void SetDistanceFromCenter(int Distance);
+	void MeetNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UStaticMeshComponent* GetDissolverShape() const;
