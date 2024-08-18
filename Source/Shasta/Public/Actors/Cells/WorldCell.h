@@ -56,25 +56,24 @@ class SHASTA_API AWorldCell : public AActor
 {
 	GENERATED_BODY()
 
+	friend class ACellManager;
+
 private:
 	//==== Exposed Fields ====
 
-	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell")
 	ECellType CellType = ECellType::None;
+
+	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell|Debug")
+	float CellRadius = 100;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
 	FDissolverShapeData DissolverShapeData;
-
-	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
-	TSubclassOf<AWorldCell> WorldCellTemplate;
 
 	//==== Hidden Fields ====
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell|Debug")
 	bool bDrawDebugs = false;
-
-	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
-	float CellRadius = 100;
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	TObjectPtr<ACellModifier> CurrentCellModifier;
@@ -96,6 +95,9 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetDissolverShape, Category = "Shasta|World Cell|Debug")
 	TObjectPtr<UStaticMeshComponent> DissolverShape;
 
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
+	TObjectPtr<UChildActorComponent> ChildActor;
+
 public:
 	//==== Constructors ====
 
@@ -108,13 +110,16 @@ public:
 	void PingNeighbors();
 #endif
 
+#if WITH_EDITOR
 	UFUNCTION(CallInEditor, Category = "Shasta")
-	void GenerateNeighbors();
+	void RotateCellModifier();
+#endif
 
 	UFUNCTION(BlueprintCallable)
 	float GetCellRadius() const;
 
-	void Init(AWorldCell* parentCell);
+	void SetCellType(ECellType InType);
+	ECellType GetCellType() const;
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
 
@@ -133,6 +138,7 @@ private:
 
 	void SetDistanceFromCenter(int Distance);
 	void IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
+	TArray<AWorldCell*> GenerateNeighbors(const TSubclassOf<AWorldCell>& InTemplate);
 
 	UFUNCTION(BlueprintCallable, BlueprintPure)
 	UStaticMeshComponent* GetDissolverShape() const;
