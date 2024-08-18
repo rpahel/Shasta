@@ -18,6 +18,10 @@ AWorldCell::AWorldCell()
 	if (Pivot)
 		Pivot->SetupAttachment(RootComponent);
 
+	ChildActor = CreateDefaultSubobject<UChildActorComponent>("Cell Modifier");
+	if (ChildActor)
+		ChildActor->SetupAttachment(Pivot);
+
 	DissolverShape = CreateDefaultSubobject<UStaticMeshComponent>("Dissolver Shape");
 	if(DissolverShape)
 		DissolverShape->SetupAttachment(RootComponent);
@@ -58,43 +62,12 @@ void AWorldCell::PingNeighbors()
 }
 #endif
 
-void AWorldCell::GenerateNeighbors()
+void AWorldCell::RotateCellModifier()
 {
-	TArray<TPair<FIntPoint, TObjectPtr<AWorldCell>>> generatedCells;
+	if(!ChildActor)
+		return;
 
-	// Generating neighbors in empty spots
-	FActorSpawnParameters spawnParams;
-	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-	for (auto& pair : Neighbors)
-	{
-		if (pair.Value)
-			continue;
-
-		pair.Value = GetWorld()->SpawnActor<AWorldCell>(
-			WorldCellTemplate,
-			FTransform(GetActorLocation() + 2 * SideCenters[pair.Key] * CellRadius),
-			spawnParams
-		);
-
-		generatedCells.Add(pair);
-
-		if (!pair.Value)
-		{
-			UE_LOGFMT(LogTemp, Warning, "{0} : Could not generate neighbour at {1}", GetName(), pair.Key.ToString());
-			continue;
-		}
-	}
-
-	UE_LOGFMT(LogTemp, Log, "{0}->GenerateCells() : Generated {1} cells.", GetName(), generatedCells.Num());
-
-	// Declare self as neighbor
-	for (auto& pair : generatedCells)
-	{
-		if (!pair.Value)
-			continue;
-
-		pair.Value->IntroduceAsNeighbor(this, GetOppositeSector(pair.Key)); // Opposite Sector
-	}
+	ChildActor->SetRelativeRotation(ChildActor->GetRelativeRotation().Quaternion() * FRotator(0, 60, 0).Quaternion());
 }
 
 float AWorldCell::GetCellRadius() const
@@ -102,12 +75,14 @@ float AWorldCell::GetCellRadius() const
 	return CellRadius;
 }
 
-void AWorldCell::Init(AWorldCell* parentCell)
+void AWorldCell::SetCellType(ECellType InType)
 {
-	if(!parentCell)
-		return;
+	CellType = InType;
+}
 
-	SetDistanceFromCenter(parentCell->GetDistanceFromCenter() + 1);
+ECellType AWorldCell::GetCellType() const
+{
+	return CellType;
 }
 
 int32 AWorldCell::GetDistanceFromCenter() const
@@ -254,6 +229,51 @@ void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& 
 	}
 
 	// Ajouter une verification pour les secteurs vides pour etre sur qu'il n'y a pas de cases voisines
+}
+
+TArray<AWorldCell*> AWorldCell::GenerateNeighbors(const TSubclassOf<AWorldCell>& InTemplate)
+{
+	TArray<TPair<FIntPoint, TObjectPtr<AWorldCell>>> generatedCells;
+
+	// Generating neighbors in empty spots
+	FActorSpawnParameters spawnParams;
+	spawnParams.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	for (auto& pair : Neighbors)
+	{
+		if (pair.Value)
+			continue;
+
+		pair.Value = GetWorld()->SpawnActor<AWorldCell>(
+			InTemplate,
+			FTransform(GetActorLocation() + 2 * SideCenters[pair.Key] * CellRadius),
+			spawnParams
+		);
+
+		if (!pair.Value)
+		{
+			UE_LOGFMT(LogTemp, Warning, "{0} : Could not generate neighbour at {1}", GetName(), pair.Key.ToString());
+			continue;
+		}
+
+		pair.Value->SetDistanceFromCenter(GetDistanceFromCenter() + 1);
+		generatedCells.Add(pair);
+	}
+
+	UE_LOGFMT(LogTemp, Log, "{0}->GenerateCells() : Generated {1} cells.", GetName(), generatedCells.Num());
+
+	TArray<AWorldCell*> retArr;
+
+	// Declare self as neighbor
+	for (auto& pair : generatedCells)
+	{
+		if (!pair.Value)
+			continue;
+
+		pair.Value->IntroduceAsNeighbor(this, GetOppositeSector(pair.Key)); // Opposite Sector
+		retArr.Add(pair.Value);
+	}
+
+	return retArr;
 }
 
 UStaticMeshComponent* AWorldCell::GetDissolverShape() const
