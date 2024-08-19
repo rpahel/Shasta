@@ -2,7 +2,10 @@
 
 
 #include "Actors/Cells/WorldCell.h"
+
+#include "Curves/CurveVector.h"
 #include "Components/ShapeComponent.h"
+#include "Kismet/KismetMathLibrary.h"
 #include <Logging/StructuredLog.h>
 
 //====================================================================================
@@ -11,6 +14,8 @@
 
 AWorldCell::AWorldCell()
 {
+	PrimaryActorTick.bCanEverTick = true;
+
 	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
 	RootComponent->SetMobility(EComponentMobility::Static);
 
@@ -70,6 +75,25 @@ void AWorldCell::RotateCellModifier()
 	ChildActor->SetRelativeRotation(ChildActor->GetRelativeRotation().Quaternion() * FRotator(0, 60, 0).Quaternion());
 }
 
+void AWorldCell::PlayTransition()
+{
+	UWorld* world = GetWorld();
+
+	if(!world)
+		return;
+
+	if(!world->IsGameWorld())
+		return;
+
+	if(!DissolverShape)
+		return;
+
+	UE_LOGFMT(LogTemp, Log, "AWorldCell::PlayTransition()");
+	DissolverShape->SetRelativeTransform(DissolverShapeData.VisibleTransform);
+	DissolverShapeData.bInTransitionAnimation = true;
+	DissolverShapeData.CurrentTransitionTime = 0;
+}
+
 float AWorldCell::GetCellRadius() const
 {
 	return CellRadius;
@@ -121,6 +145,8 @@ FIntPoint AWorldCell::GetAdjacentSectorClockwise(const FIntPoint& Sector)
 
 void AWorldCell::BeginPlay()
 {
+	Super::BeginPlay();
+
 	if (bDrawDebugs)
 	{
 		FColor colorA(FColor::MakeRandomColor());
@@ -173,9 +199,83 @@ void AWorldCell::BeginPlay()
 	}
 }
 
+void AWorldCell::Tick(float DeltaTime)
+{
+	Super::Tick(DeltaTime);
+	UpdateAnimation(DeltaTime);
+}
+
 //====================================================================================
 //==== PRIVATE METHODS
 //====================================================================================
+
+void AWorldCell::UpdateAnimation(float DeltaTime)
+{
+	if (DissolverShapeData.bInTransitionAnimation && DissolverShape)
+	{
+		UE_LOGFMT(LogTemp, Log, "A");
+
+		DissolverShapeData.CurrentTransitionTime += DeltaTime;
+
+		if (DissolverShapeData.CurrentTransitionTime <= DissolverShapeData.TransitionTime * 0.5f)
+		{
+			UE_LOGFMT(LogTemp, Log, "Ba : {0}", DissolverShapeData.CurrentTransitionTime);
+
+			if (!DissolverShapeData.bUseAdvancedCurves && DissolverShapeData.VanishAnimationCurve)
+			{
+				//DissolverShape->SetRelativeTransform(FMath::Lerp(DissolverShapeData.VisibleTransform, DissolverShapeData.HiddenTransform, DissolverShapeData.VanishAnimationCurve->GetFloatValue(DissolverShapeData.CurrentTransitionTime * 2)));
+				UKismetMathLibrary::TLerp(DissolverShapeData.VisibleTransform, DissolverShapeData.HiddenTransform, DissolverShapeData.VanishAnimationCurve->GetFloatValue(DissolverShapeData.CurrentTransitionTime * 2));
+			}
+			else if (DissolverShapeData.VanishAdvancedAnimationCurve)
+			{
+				DissolverShape->SetRelativeTransform(FTransform(
+					FQuat::Slerp(DissolverShapeData.VisibleTransform.GetRotation(), DissolverShapeData.HiddenTransform.GetRotation(), DissolverShapeData.VanishAdvancedAnimationCurve->GetVectorValue(DissolverShapeData.CurrentTransitionTime * 2).X),
+					FMath::Lerp(DissolverShapeData.VisibleTransform.GetLocation(), DissolverShapeData.HiddenTransform.GetLocation(), DissolverShapeData.VanishAdvancedAnimationCurve->GetVectorValue(DissolverShapeData.CurrentTransitionTime * 2).Y),
+					FMath::Lerp(DissolverShapeData.VisibleTransform.GetScale3D(), DissolverShapeData.HiddenTransform.GetScale3D(), DissolverShapeData.VanishAdvancedAnimationCurve->GetVectorValue(DissolverShapeData.CurrentTransitionTime * 2).Z)
+				));
+			}
+			else
+			{
+				UE_LOGFMT(LogTemp, Log, "Ca");
+
+				DissolverShape->SetRelativeTransform(UKismetMathLibrary::TLerp(DissolverShapeData.VisibleTransform, DissolverShapeData.HiddenTransform, DissolverShapeData.CurrentTransitionTime * 2));
+			}
+		}
+		else
+		{
+			UE_LOGFMT(LogTemp, Log, "Bb : {0}", DissolverShapeData.CurrentTransitionTime);
+
+			if (!DissolverShapeData.bUseAdvancedCurves && DissolverShapeData.AppearAnimationCurve)
+			{
+				//DissolverShape->SetRelativeTransform(FMath::Lerp(DissolverShapeData.HiddenTransform, DissolverShapeData.VisibleTransform, DissolverShapeData.AppearAnimationCurve->GetFloatValue((DissolverShapeData.CurrentTransitionTime - 0.5f) * 2)));
+				UKismetMathLibrary::TLerp(DissolverShapeData.HiddenTransform, DissolverShapeData.VisibleTransform, DissolverShapeData.AppearAnimationCurve->GetFloatValue((DissolverShapeData.CurrentTransitionTime - 0.5f) * 2));
+			}
+			else if (DissolverShapeData.AppearAdvancedAnimationCurve)
+			{
+				DissolverShape->SetRelativeTransform(FTransform(
+					FQuat::Slerp(DissolverShapeData.HiddenTransform.GetRotation(), DissolverShapeData.VisibleTransform.GetRotation(), DissolverShapeData.AppearAdvancedAnimationCurve->GetVectorValue((DissolverShapeData.CurrentTransitionTime - 0.5f) * 2).X),
+					FMath::Lerp(DissolverShapeData.HiddenTransform.GetLocation(), DissolverShapeData.VisibleTransform.GetLocation(), DissolverShapeData.AppearAdvancedAnimationCurve->GetVectorValue((DissolverShapeData.CurrentTransitionTime - 0.5f) * 2).Y),
+					FMath::Lerp(DissolverShapeData.HiddenTransform.GetScale3D(), DissolverShapeData.VisibleTransform.GetScale3D(), DissolverShapeData.AppearAdvancedAnimationCurve->GetVectorValue((DissolverShapeData.CurrentTransitionTime - 0.5f) * 2).Z)
+				));
+			}
+			else
+			{
+				UE_LOGFMT(LogTemp, Log, "Cb");
+
+				DissolverShape->SetRelativeTransform(UKismetMathLibrary::TLerp(DissolverShapeData.HiddenTransform, DissolverShapeData.VisibleTransform, (DissolverShapeData.CurrentTransitionTime - 0.5f) * 2));
+			}
+		}
+
+		if (DissolverShapeData.CurrentTransitionTime >= 1)
+		{
+			UE_LOGFMT(LogTemp, Log, "D");
+
+			DissolverShapeData.CurrentTransitionTime = 0;
+			DissolverShapeData.bInTransitionAnimation = false;
+			DissolverShape->SetRelativeTransform(DissolverShapeData.VisibleTransform);
+		}
+	}
+}
 
 void AWorldCell::SetDistanceFromCenter(int Distance)
 {
