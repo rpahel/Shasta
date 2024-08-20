@@ -21,41 +21,41 @@ enum class ECellType : uint8
 	Center	= 4
 };
 
-USTRUCT()
-struct SHASTA_API FDissolverShapeData
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere)
-	float TransitionTime = 1;
-
-	UPROPERTY(VisibleAnywhere)
-	float CurrentTransitionTime = 0;
-
-	UPROPERTY(EditAnywhere)
-	FTransform VisibleTransform;
-
-	UPROPERTY(EditAnywhere)
-	FTransform HiddenTransform;
-
-	UPROPERTY(EditAnywhere)
-	bool bUseAdvancedCurves = false;
-
-	UPROPERTY(VisibleAnywhere)
-	bool bInTransitionAnimation = false;
-
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
-	TObjectPtr<UCurveFloat> VanishAnimationCurve = nullptr;
-
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides))
-	TObjectPtr<UCurveVector> VanishAdvancedAnimationCurve = nullptr;
-
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
-	TObjectPtr<UCurveFloat> AppearAnimationCurve = nullptr;
-
-	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides))
-	TObjectPtr<UCurveVector> AppearAdvancedAnimationCurve = nullptr;
-};
+//USTRUCT()
+//struct SHASTA_API FDissolverShapeData
+//{
+//	GENERATED_BODY()
+//
+//	UPROPERTY(EditAnywhere)
+//	float TransitionTime = 1;
+//
+//	UPROPERTY(VisibleAnywhere)
+//	float CurrentTransitionTime = 0;
+//
+//	UPROPERTY(EditAnywhere)
+//	FTransform VisibleTransform;
+//
+//	UPROPERTY(EditAnywhere)
+//	FTransform HiddenTransform;
+//
+//	UPROPERTY(EditAnywhere)
+//	bool bUseAdvancedCurves = false;
+//
+//	UPROPERTY(VisibleAnywhere)
+//	bool bInTransitionAnimation = false;
+//
+//	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
+//	TObjectPtr<UCurveFloat> VanishAnimationCurve = nullptr;
+//
+//	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides))
+//	TObjectPtr<UCurveVector> VanishAdvancedAnimationCurve = nullptr;
+//
+//	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
+//	TObjectPtr<UCurveFloat> AppearAnimationCurve = nullptr;
+//
+//	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides))
+//	TObjectPtr<UCurveVector> AppearAdvancedAnimationCurve = nullptr;
+//};
 
 
 UCLASS(
@@ -70,14 +70,17 @@ class SHASTA_API AWorldCell : public AActor
 private:
 	//==== Exposed Fields ====
 
-	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell")
+	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
 	ECellType CellType = ECellType::None;
 
-	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell|Debug")
+	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
 	float CellRadius = 100;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
-	FDissolverShapeData DissolverShapeData;
+	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
+	TMap<ECellType, TSubclassOf<ACellModifier>> CellModifiersMap;
+
+	//UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
+	//FDissolverShapeData DissolverShapeData;
 
 	//==== Hidden Fields ====
 
@@ -101,9 +104,6 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	TObjectPtr<USceneComponent> Pivot;
 
-	UPROPERTY(VisibleAnywhere, BlueprintGetter = GetDissolverShape, Category = "Shasta|World Cell|Debug")
-	TObjectPtr<UStaticMeshComponent> DissolverShape;
-
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	TObjectPtr<UChildActorComponent> ChildActor;
 
@@ -124,9 +124,6 @@ public:
 	void RotateCellModifier();
 #endif
 
-	UFUNCTION(CallInEditor, Category = "Shasta")
-	void PlayTransition();
-
 	UFUNCTION(BlueprintCallable)
 	float GetCellRadius() const;
 
@@ -134,6 +131,7 @@ public:
 	ECellType GetCellType() const;
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
+	void ChangeCellModifier(ECellType InCellType);
 
 	//==== Static Methods ====
 
@@ -145,15 +143,15 @@ private:
 	//==== Overrides ====
 
 	void BeginPlay() override;
-	void Tick(float DeltaTime) override;
+
+#if WITH_EDITOR
+	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;
+#endif // WITH_EDITOR
 
 	//==== Methods ====
 
-	void UpdateAnimation(float DeltaTime);
+	//void UpdateAnimation(float DeltaTime);
 	void SetDistanceFromCenter(int Distance);
 	void IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
 	TArray<AWorldCell*> GenerateNeighbors(const TSubclassOf<AWorldCell>& InTemplate);
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	UStaticMeshComponent* GetDissolverShape() const;
 };
