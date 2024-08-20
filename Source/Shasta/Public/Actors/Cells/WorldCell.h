@@ -31,14 +31,17 @@ class SHASTA_API AWorldCell : public AActor
 private:
 	//==== Exposed Fields ====
 
-	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
+	UPROPERTY(EditInstanceOnly, Category = "Shasta|World Cell")
 	ECellType CellType = ECellType::None;
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
-	float CellRadius = 100;
+	float CellRadius = 10000;
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
 	TMap<ECellType, TSubclassOf<ACellModifier>> CellModifiersMap;
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
+	bool bEnemySpawnPoint = false;
 
 	//==== Hidden Fields ====
 
@@ -57,13 +60,10 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	int32 DistanceFromCenter = 0;
 
-	//==== Components ====
-
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
-	TObjectPtr<USceneComponent> Pivot;
+	FVector2D EnemySpawnTimeMinMax = FVector2D(3, 7);
 
-	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
-	TObjectPtr<UChildActorComponent> ChildActor;
+	FTimerHandle EnemySpawnTimerHandle;
 
 public:
 	//==== Constructors ====
@@ -108,7 +108,11 @@ private:
 
 	//==== Methods ====
 
-	//void UpdateAnimation(float DeltaTime);
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	void SpawnEnemy();
+
+	TArray<UPathComponent*> GetPaths() const;
+	TArray<UPathComponent*> GetPathsOfType(EShastaPathType PathType) const;
 	void SetDistanceFromCenter(int Distance);
 	void IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
 	TArray<AWorldCell*> GenerateNeighbors(const TSubclassOf<AWorldCell>& InTemplate);

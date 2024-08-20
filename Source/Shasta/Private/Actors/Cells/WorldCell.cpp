@@ -3,6 +3,7 @@
 
 #include "Actors/Cells/WorldCell.h"
 #include "Actors/Cells/CellModifier.h"
+#include "ActorComponents/Movement/PathComponent.h"
 
 #include "Curves/CurveVector.h"
 #include "Components/ShapeComponent.h"
@@ -16,17 +17,6 @@
 AWorldCell::AWorldCell()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
-	RootComponent = CreateDefaultSubobject<USceneComponent>("Root");
-	RootComponent->SetMobility(EComponentMobility::Static);
-
-	Pivot = CreateDefaultSubobject<USceneComponent>("Rotate me");
-	if (Pivot)
-		Pivot->SetupAttachment(RootComponent);
-
-	ChildActor = CreateDefaultSubobject<UChildActorComponent>("Cell Modifier");
-	if (ChildActor)
-		ChildActor->SetupAttachment(Pivot);
 
 	Neighbors.Empty();
 	Neighbors.Reserve(6);
@@ -66,10 +56,10 @@ void AWorldCell::PingNeighbors()
 
 void AWorldCell::RotateCellModifier()
 {
-	if(!ChildActor)
+	if(!CurrentCellModifier)
 		return;
 
-	ChildActor->SetRelativeRotation(ChildActor->GetRelativeRotation().Quaternion() * FRotator(0, 60, 0).Quaternion());
+	CurrentCellModifier->SetActorRotation(CurrentCellModifier->GetActorQuat() * FRotator(0, 60, 0).Quaternion());
 }
 
 float AWorldCell::GetCellRadius() const
@@ -100,14 +90,17 @@ const TMap<FIntPoint, TObjectPtr<AWorldCell>>& AWorldCell::GetNeighbors() const
 
 void AWorldCell::ChangeCellModifier(ECellType InCellType)
 {
+	if(CurrentCellModifier)
+		CurrentCellModifier->Destroy();
+
 	if (auto ptr = CellModifiersMap.Find(CellType))
 	{
-		if (ChildActor)
+		FActorSpawnParameters params;
+		params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+		if (CurrentCellModifier = GetWorld()->SpawnActor<ACellModifier>(*ptr, params))
 		{
-			if(*ptr)
-				ChildActor->SetChildActorClass(*ptr);
-			else
-				ChildActor->DestroyChildActor();
+			CurrentCellModifier->SetParentCell(this);
+			CurrentCellModifier->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
 		}
 	}
 }
@@ -140,6 +133,7 @@ void AWorldCell::BeginPlay()
 {
 	Super::BeginPlay();
 
+#if WITH_EDITOR
 	if (bDrawDebugs)
 	{
 		FColor colorA(FColor::MakeRandomColor());
@@ -190,6 +184,8 @@ void AWorldCell::BeginPlay()
 			);
 		}
 	}
+#endif // WITH_EDITOR
+
 }
 
 #if WITH_EDITOR
@@ -206,6 +202,104 @@ void AWorldCell::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 //==== PRIVATE METHODS
 //====================================================================================
 
+void AWorldCell::SpawnEnemy()
+{
+	// Check if a neighbor can welcome an enemy by checking for a path that starts near this cell
+	for (auto& pair : Neighbors)
+	{
+		if(!pair.Value || pair.Value->CellType != ECellType::Defense)
+			continue;
+
+		for (auto& path : pair.Value->GetPathsOfType(EShastaPathType::Ground))
+		{
+			if(!path)
+				continue;
+
+			const FSplinePoint point = path->GetSplinePointAt(0, ESplineCoordinateSpace::Local);
+			const FVector pointPos = pair.Value->GetTransform().TransformPositionNoScale(point.Position);
+			const FVector A = (GetActorLocation() - pair.Value->GetActorLocation()).GetSafeNormal();
+			const FVector B = (pointPos - pair.Value->GetActorLocation()).GetSafeNormal();
+
+#if WITH_EDITOR
+			DrawDebugPoint(
+				GetWorld(),
+				pointPos,
+				20,
+				FColor::Yellow,
+				false,
+				5,
+				10
+			);
+
+			DrawDebugLine(
+				GetWorld(),
+				pair.Value->GetActorLocation(),
+				pair.Value->GetActorLocation() + A * CellRadius,
+				FColor::Cyan,
+				false,
+				5,
+				10,
+				5
+			);
+
+			DrawDebugLine(
+				GetWorld(),
+				pair.Value->GetActorLocation(),
+				pair.Value->GetActorLocation() + B * CellRadius,
+				FColor::Magenta,
+				false,
+				5,
+				10,
+				5
+			);
+#endif // WITH_EDITOR
+
+			// A and B cant be more than 30° apart
+			if(A.Dot(B) < cos(FMath::DegreesToRadians(30)))
+				continue;
+
+#if WITH_EDITOR
+			DrawDebugPoint(
+				GetWorld(),
+				pointPos,
+				20,
+				FColor::Red,
+				false,
+				5,
+				10
+			);
+#endif // WITH_EDITOR
+		}
+	}
+}
+
+TArray<UPathComponent*> AWorldCell::GetPaths() const
+{
+	TArray<UPathComponent*> ret;
+
+	if(!CurrentCellModifier)
+		return ret;
+	
+	return CurrentCellModifier->GetPaths();
+}
+
+TArray<UPathComponent*> AWorldCell::GetPathsOfType(EShastaPathType PathType) const
+{
+	TArray<UPathComponent*> ret;
+
+	if (!CurrentCellModifier)
+		return ret;
+
+	ret = CurrentCellModifier->GetPaths().FilterByPredicate(
+		[PathType](UPathComponent* path)
+		{
+			return path->GetTypes().Contains(PathType);
+		}
+	);
+
+	return ret;
+}
+
 void AWorldCell::SetDistanceFromCenter(int Distance)
 {
 	DistanceFromCenter = Distance;
@@ -218,7 +312,7 @@ void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& 
 
 	TObjectPtr<AWorldCell>* neighborPtr = Neighbors.Find(NeighborSector);
 
-	if (!neighborPtr->IsNull() && *neighborPtr != NeighborCell)
+	if (neighborPtr && *neighborPtr && *neighborPtr != NeighborCell)
 	{
 		UE_LOGFMT(LogTemp, Error, "{0}->IntroduceAsNeighbor() : The incoming {1} neighbor is different from the already present neighbor !", GetName(), NeighborSector.ToString());
 		return;
@@ -233,7 +327,7 @@ void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& 
 	{
 		if (auto ptr_b = Neighbors.Find(GetAdjacentSectorClockwise(NeighborSector)))
 		{
-			if (ptr_b->IsNull())
+			if (!*ptr_b)
 			{
 				if ((*ptr_b = *ptr_a) != nullptr)
 				{
@@ -247,7 +341,7 @@ void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& 
 	{
 		if (auto ptr_b = Neighbors.Find(GetAdjacentSectorCounterClockwise(NeighborSector)))
 		{
-			if (ptr_b->IsNull())
+			if (!*ptr_b)
 			{
 				if ((*ptr_b = *ptr_a) != nullptr)
 				{

@@ -10,8 +10,19 @@
 //==== PUBLIC METHODS
 //====================================================================================
 
-const TMultiMap<EShastaPathType, TObjectPtr<UPathComponent>>& ACellModifier::GetPaths() const
+const TArray<UPathComponent*>& ACellModifier::GetPaths()
 {
+	if (Paths.IsEmpty())
+	{
+		TArray<USceneComponent*> arr;
+		RootComponent->GetChildrenComponents(true, arr);
+		for (auto& comp : arr)
+		{
+			if (UPathComponent* path = Cast<UPathComponent>(comp))
+				Paths.Add(path);
+		}
+	}
+
 	return Paths;
 }
 
@@ -29,16 +40,8 @@ void ACellModifier::BeginPlay()
 	Super::BeginPlay();
 	
 	Paths.Empty();
-	for (auto& comp : GetComponents())
-	{
-		if (UPathComponent* path = Cast<UPathComponent>(comp))
-		{
-			for (auto& type : path->GetTypes())
-			{
-				Paths.Add(type, path);
-			}
-		}
-	}
+
+	GetPaths();
 
 	auto enumClassToFString = [](EShastaPathType inValue) -> FName
 		{
@@ -65,6 +68,6 @@ void ACellModifier::BeginPlay()
 		};
 
 	UE_LOGFMT(LogTemp, Log, "{0} - {1} Paths found : ", GetName(), Paths.Num());
-	for (auto& pair : Paths)
-		UE_LOGFMT(LogTemp, Log, "Type {0} : {1} ", enumClassToFString(pair.Key), pair.Value->GetName());
+	for (auto& path : Paths)
+		UE_LOGFMT(LogTemp, Log, "{1}", path->GetName());
 }

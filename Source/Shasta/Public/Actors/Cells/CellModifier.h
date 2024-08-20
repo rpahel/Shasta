@@ -29,12 +29,12 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Defense|Debug")
 	TObjectPtr<AWorldCell> ParentCell;
 
-	TMultiMap<EShastaPathType, TObjectPtr<UPathComponent>> Paths;
+	TArray<TObjectPtr<UPathComponent>> Paths;
 
 public:
 	//==== Methods ====
 
-	const TMultiMap<EShastaPathType, TObjectPtr<UPathComponent>>& GetPaths() const;
+	const TArray<UPathComponent*>& GetPaths();
 	void SetParentCell(AWorldCell* WorldCell);
 
 private:

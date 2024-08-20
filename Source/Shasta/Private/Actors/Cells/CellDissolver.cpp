@@ -41,7 +41,6 @@ void ACellDissolver::PlayTransition()
 	if(!Pivot)
 		return;
 
-	UE_LOGFMT(LogTemp, Log, "PlayTransition::PlayTransition()");
 	Pivot->SetRelativeTransform(VisibleTransform);
 	bInTransitionAnimation = true;
 	CurrentTransitionTime = 0;
@@ -66,14 +65,10 @@ void ACellDissolver::UpdateAnimation(float DeltaTime)
 {
 	if (bInTransitionAnimation)
 	{
-		UE_LOGFMT(LogTemp, Log, "A");
-
 		CurrentTransitionTime += DeltaTime / TransitionTime;
 
 		if (CurrentTransitionTime <= 0.5f)
 		{
-			UE_LOGFMT(LogTemp, Log, "Ba : {0}", CurrentTransitionTime);
-
 			if (!bUseAdvancedCurves && VanishAnimationCurve)
 			{
 				Pivot->SetRelativeTransform(UKismetMathLibrary::TLerp(VisibleTransform, HiddenTransform, VanishAnimationCurve->GetFloatValue(CurrentTransitionTime * 2)));
@@ -88,17 +83,13 @@ void ACellDissolver::UpdateAnimation(float DeltaTime)
 			}
 			else
 			{
-				UE_LOGFMT(LogTemp, Log, "Ca");
 				Pivot->SetRelativeTransform(UKismetMathLibrary::TLerp(VisibleTransform, HiddenTransform, CurrentTransitionTime * 2));
 			}
 		}
 		else
 		{
-			UE_LOGFMT(LogTemp, Log, "Bb : {0}", CurrentTransitionTime);
-
 			if (!bUseAdvancedCurves && AppearAnimationCurve)
 			{
-				//SetRelativeTransform(FMath::Lerp(HiddenTransform, VisibleTransform, AppearAnimationCurve->GetFloatValue((CurrentTransitionTime - 0.5f) * 2)));
 				Pivot->SetRelativeTransform(UKismetMathLibrary::TLerp(HiddenTransform, VisibleTransform, AppearAnimationCurve->GetFloatValue((CurrentTransitionTime - 0.5f) * 2)));
 			}
 			else if (AppearAdvancedAnimationCurve)
@@ -111,14 +102,12 @@ void ACellDissolver::UpdateAnimation(float DeltaTime)
 			}
 			else
 			{
-				UE_LOGFMT(LogTemp, Log, "Cb");
 				Pivot->SetRelativeTransform(UKismetMathLibrary::TLerp(HiddenTransform, VisibleTransform, (CurrentTransitionTime - 0.5f) * 2));
 			}
 		}
 
 		if (CurrentTransitionTime >= 1)
 		{
-			UE_LOGFMT(LogTemp, Log, "D");
 			CurrentTransitionTime = 0;
 			bInTransitionAnimation = false;
 			Pivot->SetRelativeTransform(VisibleTransform);
