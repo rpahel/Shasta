@@ -54,12 +54,23 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Dissolver|Debug")
 	bool bInTransitionAnimation = false;
 
+	//==== Components ===
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> Root;
+
+	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<USceneComponent> Pivot;
+
 public:
 	//==== Constructors ====
 
 	ACellDissolver();
 
 	//==== Methods ====
+
+	void PlayTransition();
+	void SetVisibilityTransform(bool IsVisible);
 
 private:
 	//==== Overrides ====

@@ -2,13 +2,26 @@
 
 
 #include "Actors/Cells/CellManager.h"
+#include "Actors/Cells/CellDissolver.h"
 #include "Actors/Cells/WorldCell.h"
 
 #include <Logging/StructuredLog.h>
+#include <Kismet/GameplayStatics.h>
 
 //====================================================================================
 //==== PRIVATE METHODS
 //====================================================================================
+
+void ACellManager::PlayTransition()
+{
+	if(CellDissolver)
+		CellDissolver->PlayTransition();
+}
+
+void ACellManager::BeginPlay()
+{
+	CellDissolver = Cast<ACellDissolver>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellDissolver::StaticClass()));
+}
 
 void ACellManager::GenerateCells()
 {

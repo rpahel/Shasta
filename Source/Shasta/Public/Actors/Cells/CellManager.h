@@ -7,6 +7,7 @@
 #include "CellManager.generated.h"
 
 class AWorldCell;
+class ACellDissolver;
 
 /**
  * 
@@ -24,18 +25,30 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Shasta|Cell Manager")
 	TSubclassOf<AWorldCell> WorldCellTemplate;
 
-	//==== Hidden Fields ====
-
 	UPROPERTY(EditAnywhere, Category = "Shasta|Cell Manager")
 	int32 NumberOfRings = 2;
 
-	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Manager")
+	//==== Hidden Fields ====
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Manager|Debug")
 	TArray<TObjectPtr<AWorldCell>> WorldCellArray;
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Manager|Debug")
+	TObjectPtr<ACellDissolver> CellDissolver;
 
 public:
 	//==== Methods ====
 
+#if WITH_EDITOR
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	void PlayTransition();
+#endif
+
 private:
+	//==== Overrides ====
+	
+	void BeginPlay() override;
+
 	//==== Methods ====
 
 	UFUNCTION(CallInEditor, Category = "Shasta")

@@ -72,25 +72,6 @@ void AWorldCell::RotateCellModifier()
 	ChildActor->SetRelativeRotation(ChildActor->GetRelativeRotation().Quaternion() * FRotator(0, 60, 0).Quaternion());
 }
 
-//void AWorldCell::PlayTransition()
-//{
-//	UWorld* world = GetWorld();
-//
-//	if(!world)
-//		return;
-//
-//	if(!world->IsGameWorld())
-//		return;
-//
-//	if(!DissolverShape)
-//		return;
-//
-//	UE_LOGFMT(LogTemp, Log, "AWorldCell::PlayTransition()");
-//	DissolverShape->SetRelativeTransform(DissolverShapeData.VisibleTransform);
-//	DissolverShapeData.bInTransitionAnimation = true;
-//	DissolverShapeData.CurrentTransitionTime = 0;
-//}
-
 float AWorldCell::GetCellRadius() const
 {
 	return CellRadius;
