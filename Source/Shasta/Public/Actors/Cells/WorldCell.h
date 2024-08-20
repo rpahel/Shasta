@@ -27,6 +27,12 @@ struct SHASTA_API FDissolverShapeData
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere)
+	float TransitionTime = 1;
+
+	UPROPERTY(VisibleAnywhere)
+	float CurrentTransitionTime = 0;
+
+	UPROPERTY(EditAnywhere)
 	FTransform VisibleTransform;
 
 	UPROPERTY(EditAnywhere)
@@ -34,6 +40,9 @@ struct SHASTA_API FDissolverShapeData
 
 	UPROPERTY(EditAnywhere)
 	bool bUseAdvancedCurves = false;
+
+	UPROPERTY(VisibleAnywhere)
+	bool bInTransitionAnimation = false;
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
 	TObjectPtr<UCurveFloat> VanishAnimationCurve = nullptr;
@@ -115,6 +124,9 @@ public:
 	void RotateCellModifier();
 #endif
 
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	void PlayTransition();
+
 	UFUNCTION(BlueprintCallable)
 	float GetCellRadius() const;
 
@@ -133,9 +145,11 @@ private:
 	//==== Overrides ====
 
 	void BeginPlay() override;
+	void Tick(float DeltaTime) override;
 
 	//==== Methods ====
 
+	void UpdateAnimation(float DeltaTime);
 	void SetDistanceFromCenter(int Distance);
 	void IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector);
 	TArray<AWorldCell*> GenerateNeighbors(const TSubclassOf<AWorldCell>& InTemplate);
