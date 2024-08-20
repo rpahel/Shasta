@@ -6,8 +6,6 @@
 #include "GameFramework/Actor.h"
 #include "WorldCell.generated.h"
 
-class UCurveFloat;
-class UCurveVector;
 class UPathComponent;
 class ACellModifier;
 enum class EShastaPathType : uint8;
@@ -20,43 +18,6 @@ enum class ECellType : uint8
 	Defense	= 2,
 	Center	= 4
 };
-
-//USTRUCT()
-//struct SHASTA_API FDissolverShapeData
-//{
-//	GENERATED_BODY()
-//
-//	UPROPERTY(EditAnywhere)
-//	float TransitionTime = 1;
-//
-//	UPROPERTY(VisibleAnywhere)
-//	float CurrentTransitionTime = 0;
-//
-//	UPROPERTY(EditAnywhere)
-//	FTransform VisibleTransform;
-//
-//	UPROPERTY(EditAnywhere)
-//	FTransform HiddenTransform;
-//
-//	UPROPERTY(EditAnywhere)
-//	bool bUseAdvancedCurves = false;
-//
-//	UPROPERTY(VisibleAnywhere)
-//	bool bInTransitionAnimation = false;
-//
-//	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
-//	TObjectPtr<UCurveFloat> VanishAnimationCurve = nullptr;
-//
-//	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides))
-//	TObjectPtr<UCurveVector> VanishAdvancedAnimationCurve = nullptr;
-//
-//	UPROPERTY(EditAnywhere, meta = (EditCondition = "!bUseAdvancedCurves", EditConditionHides))
-//	TObjectPtr<UCurveFloat> AppearAnimationCurve = nullptr;
-//
-//	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides))
-//	TObjectPtr<UCurveVector> AppearAdvancedAnimationCurve = nullptr;
-//};
-
 
 UCLASS(
 	AutoExpandCategories = "Shasta|World Cell"
@@ -78,9 +39,6 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
 	TMap<ECellType, TSubclassOf<ACellModifier>> CellModifiersMap;
-
-	//UPROPERTY(EditDefaultsOnly, Category = "Shasta|World Cell")
-	//FDissolverShapeData DissolverShapeData;
 
 	//==== Hidden Fields ====
 
