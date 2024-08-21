@@ -9,7 +9,6 @@
 AEnemy::AEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
-
 }
 
 void AEnemy::TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path)
@@ -20,9 +19,16 @@ void AEnemy::TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path)
 	if(!WorldCell->GetCellModifier())
 		return;
 
-	const FVector pos = WorldCell->GetCellModifier()->GetTransform().TransformPositionNoScale(Path->GetSplinePointAt(0, ESplineCoordinateSpace::Local).Position);
+	CurrentPath = Path;
+	CurrentWorldCell = WorldCell;
 
-	SetActorLocation(pos);
+	FSplinePoint point = Path->GetSplinePointAt(0, ESplineCoordinateSpace::Local);
+	const FVector pos = WorldCell->GetCellModifier()->GetTransform().TransformPositionNoScale(point.Position);
+	const FQuat rot = WorldCell->GetCellModifier()->GetTransform().TransformVectorNoScale(point.LeaveTangent).ToOrientationQuat();
+
+	SetActorLocationAndRotation(pos, rot);
+
+	bCanMove = true;
 }
 
 void AEnemy::BeginPlay()
@@ -33,8 +39,24 @@ void AEnemy::BeginPlay()
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
+
+	ProgressOnPath(DeltaTime);
 }
 
 void AEnemy::ProgressOnPath(float DeltaTime)
 {
+	if(!CurrentPath || !bCanMove)
+		return;
+
+	if(CurrentPathProgress >= 1)
+	{ 
+		OnFinishedPath.Broadcast(this);
+		bCanMove = false;
+		return;
+	}
+
+	CurrentPathProgress += DeltaTime * SpeedFactor;
+	const FVector loc = CurrentPath->GetLocationAtTime(CurrentPathProgress, ESplineCoordinateSpace::World);
+	const FQuat rot = CurrentPath->GetTangentAtTime(CurrentPathProgress, ESplineCoordinateSpace::World).ToOrientationQuat();
+	SetActorLocationAndRotation(loc, rot);
 }

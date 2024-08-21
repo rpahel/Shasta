@@ -3,6 +3,7 @@
 
 #include "Actors/Cells/WorldCell.h"
 #include "Actors/Cells/CellModifier.h"
+#include "Actors/Pawns/Enemy.h"
 #include "ActorComponents/Movement/PathComponent.h"
 
 #include "Curves/CurveVector.h"
@@ -209,6 +210,9 @@ void AWorldCell::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 
 void AWorldCell::SpawnEnemy()
 {
+	if(!EnemyTemplate || !bEnemySpawnPoint)
+		return;
+
 	// Check if a neighbor can welcome an enemy by checking for a path that starts near this cell
 	for (auto& pair : Neighbors)
 	{
@@ -277,6 +281,11 @@ void AWorldCell::SpawnEnemy()
 				10
 			);
 #endif // WITH_EDITOR
+
+			FActorSpawnParameters params;
+			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+			if (AEnemy* enemy = GetWorld()->SpawnActor<AEnemy>(EnemyTemplate, pointPos, FRotator(), params))
+				enemy->TeleportOnPath(pair.Value, path);
 		}
 	}
 }

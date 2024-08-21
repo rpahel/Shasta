@@ -8,6 +8,7 @@
 
 class UPathComponent;
 class ACellModifier;
+class AEnemy;
 enum class EShastaPathType : uint8;
 
 UENUM()
@@ -42,6 +43,9 @@ private:
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
 	bool bEnemySpawnPoint = false;
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
+	TSubclassOf<AEnemy> EnemyTemplate;
 
 	//==== Hidden Fields ====
 
