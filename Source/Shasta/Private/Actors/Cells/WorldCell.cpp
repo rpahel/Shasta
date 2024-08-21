@@ -215,8 +215,11 @@ void AWorldCell::SpawnEnemy()
 			if(!path)
 				continue;
 
+			if(!pair.Value->CurrentCellModifier)
+				continue;
+
 			const FSplinePoint point = path->GetSplinePointAt(0, ESplineCoordinateSpace::Local);
-			const FVector pointPos = pair.Value->GetTransform().TransformPositionNoScale(point.Position);
+			const FVector pointPos = pair.Value->CurrentCellModifier->GetTransform().TransformPositionNoScale(point.Position);
 			const FVector A = (GetActorLocation() - pair.Value->GetActorLocation()).GetSafeNormal();
 			const FVector B = (pointPos - pair.Value->GetActorLocation()).GetSafeNormal();
 
