@@ -90,6 +90,7 @@ public:
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
 	void ChangeCellModifier(ECellType InCellType);
+	ACellModifier* GetCellModifier() const;
 
 	//==== Static Methods ====
 

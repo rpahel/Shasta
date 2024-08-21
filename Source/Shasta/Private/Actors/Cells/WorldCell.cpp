@@ -105,6 +105,11 @@ void AWorldCell::ChangeCellModifier(ECellType InCellType)
 	}
 }
 
+ACellModifier* AWorldCell::GetCellModifier() const
+{
+	return CurrentCellModifier;
+}
+
 //====================================================================================
 //==== PUBLIC STATIC METHODS
 //====================================================================================
