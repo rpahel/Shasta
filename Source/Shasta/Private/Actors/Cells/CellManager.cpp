@@ -18,6 +18,17 @@ void ACellManager::PlayTransition()
 		CellDissolver->PlayTransition();
 }
 
+void ACellManager::BeginEnemySpawn()
+{
+	for (auto& cell : WorldCellArray)
+	{
+		if(!cell)
+			continue;
+
+		cell->StartSpawnEnemyTimer();
+	}
+}
+
 void ACellManager::BeginPlay()
 {
 	CellDissolver = Cast<ACellDissolver>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellDissolver::StaticClass()));

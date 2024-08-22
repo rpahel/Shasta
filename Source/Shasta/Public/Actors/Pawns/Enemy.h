@@ -19,7 +19,7 @@ class SHASTA_API AEnemy : public APawn
 	GENERATED_BODY()
 
 public:
-	FEnemyEnemySignature OnFinishedPath;
+	FEnemyEnemySignature OnArrivedAtCenterDelegate;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Shasta|Enemy")
@@ -35,16 +35,23 @@ private:
 	float CurrentPathProgress = 0;
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Enemy|Debug")
+	float IdleTimer = 0;
+	
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Enemy|Debug")
 	bool bCanMove = false;
+
+	FTimerHandle PathSearchTimerHandle;
 
 public:
 	AEnemy();
 
 	void TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path);
+	void Die();
 
 private:	
-	virtual void BeginPlay() override;
-	virtual void Tick(float DeltaTime) override;
+	void BeginPlay() override;
+	void EndPlay(EEndPlayReason::Type EndReason) override;
+	void Tick(float DeltaTime) override;
 
 	void ProgressOnPath(float DeltaTime);
 };

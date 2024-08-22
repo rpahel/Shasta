@@ -44,6 +44,9 @@ public:
 	void PlayTransition();
 #endif
 
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	void BeginEnemySpawn();
+
 private:
 	//==== Overrides ====
 	

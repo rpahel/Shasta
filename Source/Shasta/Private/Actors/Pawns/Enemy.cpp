@@ -29,6 +29,13 @@ void AEnemy::TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path)
 	SetActorLocationAndRotation(pos, rot);
 
 	bCanMove = true;
+	CurrentPathProgress = 0;
+}
+
+void AEnemy::Die()
+{
+	GetWorld()->GetTimerManager().ClearTimer(PathSearchTimerHandle);
+	bCanMove = false;
 }
 
 void AEnemy::BeginPlay()
@@ -36,11 +43,24 @@ void AEnemy::BeginPlay()
 	Super::BeginPlay();
 }
 
+void AEnemy::EndPlay(EEndPlayReason::Type EndReason)
+{
+	GetWorld()->GetTimerManager().ClearTimer(PathSearchTimerHandle);
+}
+
 void AEnemy::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
 	ProgressOnPath(DeltaTime);
+
+	// Securite
+	if (!bCanMove)
+	{
+		IdleTimer += DeltaTime;
+		if(IdleTimer >= 30)
+			Destroy();
+	}
 }
 
 void AEnemy::ProgressOnPath(float DeltaTime)
@@ -50,10 +70,39 @@ void AEnemy::ProgressOnPath(float DeltaTime)
 
 	if(CurrentPathProgress >= 1)
 	{ 
-		OnFinishedPath.Broadcast(this);
 		bCanMove = false;
 
-		Destroy();
+		const FVector dir = (GetActorLocation() - CurrentWorldCell->GetActorLocation()).GetSafeNormal();
+		AWorldCell* nextCell = CurrentWorldCell->GetCellInDirection(dir);
+
+		if (nextCell->GetCellType() == ECellType::Center)
+		{
+			OnArrivedAtCenterDelegate.Broadcast(this);
+			SetActorLocation(nextCell->GetActorLocation() - dir * 250);
+			SetActorRotation(FVector::VectorPlaneProject(dir, FVector::UpVector).ToOrientationQuat());
+			return;
+		}
+
+		TArray<UPathComponent*> paths = nextCell->GetValidPaths(GetActorLocation(), EShastaPathType::Ground, true);
+
+		// Si on trouve pas de paths dans la cell, mettre un timer et check a la fin du timer.
+		if (paths.IsEmpty())
+		{
+			GetWorld()->GetTimerManager().SetTimer(
+				PathSearchTimerHandle,
+				[this]()
+				{
+					bCanMove = true;
+				},
+				2,
+				false
+			);
+
+			return;
+		}
+
+		TeleportOnPath(nextCell, paths[FMath::RandHelper(paths.Num())]);
+
 		return;
 	}
 

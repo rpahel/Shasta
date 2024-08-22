@@ -146,37 +146,40 @@ TArray<UPathComponent*> AWorldCell::GetValidPaths(const FVector& StartPoint, ESh
 		const FVector B = (pointPos - GetActorLocation()).GetSafeNormal();
 
 	#if WITH_EDITOR
-		DrawDebugPoint(
-			GetWorld(),
-			pointPos,
-			20,
-			FColor::Yellow,
-			false,
-			5,
-			10
-		);
+		if (bDrawDebugs)
+		{
+			DrawDebugPoint(
+				GetWorld(),
+				pointPos,
+				20,
+				FColor::Yellow,
+				false,
+				5,
+				10
+			);
 
-		DrawDebugLine(
-			GetWorld(),
-			GetActorLocation(),
-			GetActorLocation() + A * CellRadius,
-			FColor::Cyan,
-			false,
-			5,
-			10,
-			5
-		);
+			DrawDebugLine(
+				GetWorld(),
+				GetActorLocation(),
+				GetActorLocation() + A * CellRadius,
+				FColor::Cyan,
+				false,
+				5,
+				10,
+				5
+			);
 
-		DrawDebugLine(
-			GetWorld(),
-			GetActorLocation(),
-			GetActorLocation() + B * CellRadius,
-			FColor::Magenta,
-			false,
-			5,
-			10,
-			5
-		);
+			DrawDebugLine(
+				GetWorld(),
+				GetActorLocation(),
+				GetActorLocation() + B * CellRadius,
+				FColor::Magenta,
+				false,
+				5,
+				10,
+				5
+			);
+		}
 	#endif // WITH_EDITOR
 
 		// A and B cant be more than 30° apart
@@ -193,7 +196,7 @@ TArray<UPathComponent*> AWorldCell::GetValidPaths(const FVector& StartPoint, ESh
 		}
 
 		const FVector endPos = path->GetLocationAtTime(1, ESplineCoordinateSpace::World);
-		AWorldCell* cell = GetCellInDirection(endPos - GetActorLocation());
+		AWorldCell* cell = GetCellInDirection((endPos - GetActorLocation()).GetSafeNormal());
 
 		if (!cell)
 			continue;
@@ -214,17 +217,20 @@ TArray<UPathComponent*> AWorldCell::GetValidPaths(const FVector& StartPoint, ESh
 	}
 
 #if WITH_EDITOR
-	for (auto& path : retArr)
+	if (bDrawDebugs)
 	{
-		DrawDebugPoint(
-			GetWorld(),
-			path->GetLocationAtTime(0, ESplineCoordinateSpace::World),
-			20,
-			FColor::Red,
-			false,
-			5,
-			10
-		);
+		for (auto& path : retArr)
+		{
+			DrawDebugPoint(
+				GetWorld(),
+				path->GetLocationAtTime(0, ESplineCoordinateSpace::World),
+				20,
+				FColor::Red,
+				false,
+				5,
+				10
+			);
+		}
 	}
 #endif // WITH_EDITOR
 
@@ -274,8 +280,6 @@ FIntPoint AWorldCell::GetAdjacentSectorClockwise(const FIntPoint& Sector)
 void AWorldCell::BeginPlay()
 {
 	Super::BeginPlay();
-
-	StartSpawnEnemyTimer();
 
 #if WITH_EDITOR
 	if (bDrawDebugs)
@@ -357,17 +361,17 @@ void AWorldCell::SpawnEnemy()
 {
 	if (!EnemyTemplate || !bEnemySpawnPoint)
 		return;
-	
+
 	TArray<TPair<AWorldCell*, TArray<UPathComponent*>>> candidates;
 
 	for (auto& pair : Neighbors)
 	{
-		if(!pair.Value)
+		if (!pair.Value)
 			continue;
 
 		TArray<UPathComponent*> paths = pair.Value->GetValidPaths(GetActorLocation() + (pair.Value->GetActorLocation() - GetActorLocation()) * 0.5f, EShastaPathType::Ground, true);
 
-		if(paths.IsEmpty())
+		if (paths.IsEmpty())
 			continue;
 
 		candidates.Add({ pair.Value, paths });
