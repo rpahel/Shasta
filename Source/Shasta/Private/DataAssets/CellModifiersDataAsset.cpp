@@ -3,7 +3,7 @@
 
 #include "DataAssets/CellModifiersDataAsset.h"
 
-const TArray<FCellModifierName>& UCellModifiersDataAsset::GetCellModifiers() const
+const TMap<FName, TSubclassOf<ACellModifier>>& UCellModifiersDataAsset::GetCellModifiers() const
 {
 	return CellModifiers;
 }

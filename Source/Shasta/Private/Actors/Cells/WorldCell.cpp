@@ -5,6 +5,7 @@
 #include "Actors/Cells/CellModifier.h"
 #include "Actors/Pawns/Enemy.h"
 #include "ActorComponents/Movement/PathComponent.h"
+#include "DataAssets/CellModifiersDataAsset.h"
 
 #include "Curves/CurveVector.h"
 #include "Components/ShapeComponent.h"
@@ -71,7 +72,35 @@ float AWorldCell::GetCellRadius() const
 void AWorldCell::SetCellType(ECellType InType)
 {
 	CellType = InType;
-	ChangeCellModifier(InType);
+
+	switch (InType)
+	{
+		case ECellType::None:
+		{
+			return;
+		}
+
+		case ECellType::Border:
+		{
+			ChangeCellModifier("Border");
+			break;
+		}
+
+		case ECellType::Defense:
+		{
+			ChangeCellModifier("Default");
+			break;
+		}
+
+		case ECellType::Center:
+		{
+			ChangeCellModifier("Center");
+			break;
+		}
+
+		default:
+			break;
+	}
 }
 
 ECellType AWorldCell::GetCellType() const
@@ -89,19 +118,27 @@ const TMap<FIntPoint, TObjectPtr<AWorldCell>>& AWorldCell::GetNeighbors() const
 	return Neighbors;
 }
 
-void AWorldCell::ChangeCellModifier(ECellType InCellType)
+void AWorldCell::ChangeCellModifier(const FName& CellModifierName)
 {
-	if (CurrentCellModifier)
-		CurrentCellModifier->Destroy();
+	if (!CellModifiersDataAsset)
+		return;
 
-	if (auto ptr = CellModifiersMap.Find(CellType))
+	if (auto ptr = CellModifiersDataAsset->GetCellModifiers().Find(CellModifierName))
 	{
+		FQuat rot;
+
+		if (CurrentCellModifier)
+		{
+			rot = CurrentCellModifier->GetActorQuat();
+			CurrentCellModifier->Destroy();
+		}
+
 		FActorSpawnParameters params;
 		params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-		if (CurrentCellModifier = GetWorld()->SpawnActor<ACellModifier>(*ptr, params))
+		if (CurrentCellModifier = GetWorld()->SpawnActor<ACellModifier>(*ptr, GetActorLocation(), rot.Rotator(), params))
 		{
 			CurrentCellModifier->SetParentCell(this);
-			CurrentCellModifier->AttachToActor(this, FAttachmentTransformRules::SnapToTargetNotIncludingScale);
+			CurrentCellModifier->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 		}
 	}
 }
@@ -349,7 +386,10 @@ void AWorldCell::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 	const FName name = PropertyChangedEvent.GetPropertyName();
 
 	if (name == GET_MEMBER_NAME_CHECKED(AWorldCell, CellType))
-		ChangeCellModifier(CellType);
+		SetCellType(CellType);
+
+	if (name == GET_MEMBER_NAME_CHECKED(AWorldCell, DefenseModifierName))
+		ChangeCellModifier(DefenseModifierName);
 }
 #endif // WITH_EDITOR
 

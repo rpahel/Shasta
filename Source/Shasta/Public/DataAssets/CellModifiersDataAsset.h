@@ -7,18 +7,16 @@
 #include "CellModifiersDataAsset.generated.h"
 
 class ACellModifier;
+enum class ECellType : uint8;
 
-USTRUCT()
-struct FCellModifierName
-{
-	GENERATED_BODY();
-
-	UPROPERTY(EditAnywhere)
-	FName CellModifierName;
-
-	UPROPERTY(EditAnywhere)
-	TSubclassOf<ACellModifier> CellModifierTemplate;
-};
+//USTRUCT()
+//struct FCellModifierName
+//{
+//	GENERATED_BODY();
+//
+//	UPROPERTY(EditAnywhere)
+//	TMap<FName, TSubclassOf<ACellModifier>> DefenseModifiers;
+//};
 
 /**
  * 
@@ -30,8 +28,8 @@ class SHASTA_API UCellModifiersDataAsset : public UDataAsset
 	
 private:
 	UPROPERTY(EditAnywhere)
-	TArray<FCellModifierName> CellModifiers;
+	TMap<FName, TSubclassOf<ACellModifier>> CellModifiers;
 
 public:
-	const TArray<FCellModifierName>& GetCellModifiers() const;
+	const TMap<FName, TSubclassOf<ACellModifier>>& GetCellModifiers() const;
 };

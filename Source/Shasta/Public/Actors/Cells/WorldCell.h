@@ -6,6 +6,7 @@
 #include "GameFramework/Actor.h"
 #include "WorldCell.generated.h"
 
+class UCellModifiersDataAsset;
 class UPathComponent;
 class ACellModifier;
 class AEnemy;
@@ -39,7 +40,10 @@ private:
 	float CellRadius = 10000;
 
 	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
-	TMap<ECellType, TSubclassOf<ACellModifier>> CellModifiersMap;
+	TObjectPtr<UCellModifiersDataAsset> CellModifiersDataAsset;
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Defense", EditConditionHides), Category = "Shasta|World Cell")
+	FName DefenseModifierName = "Default";
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
 	bool bEnemySpawnPoint = false;
@@ -93,7 +97,7 @@ public:
 	ECellType GetCellType() const;
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
-	void ChangeCellModifier(ECellType InCellType);
+	void ChangeCellModifier(const FName& CellModifierName);
 	ACellModifier* GetCellModifier() const;
 	void StartSpawnEnemyTimer();
 	TArray<UPathComponent*> GetValidPaths(const FVector& StartPoint, EShastaPathType pathType, bool DeepSearch = false);
