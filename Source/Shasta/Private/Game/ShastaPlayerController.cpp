@@ -7,6 +7,7 @@
 #include "InputAction.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "GameFramework/GameUserSettings.h"
 #include "Logging/StructuredLog.h"
 
 void AShastaPlayerController::AddMappingContext(const FName& InIMCName)
@@ -31,6 +32,12 @@ void AShastaPlayerController::BeginPlay()
 {
 	SetInputMode(FInputModeGameOnly());
 	BindActions();
+	if (UGameUserSettings* settings = GEngine->GetGameUserSettings())
+	{
+		settings->SetFullscreenMode(EWindowMode::Fullscreen);
+		settings->SetOverallScalabilityLevel(3);
+		settings->ApplySettings(false);
+	}
 }
 
 void AShastaPlayerController::BindActions()

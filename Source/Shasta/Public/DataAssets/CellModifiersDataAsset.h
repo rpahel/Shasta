@@ -9,15 +9,6 @@
 class ACellModifier;
 enum class ECellType : uint8;
 
-//USTRUCT()
-//struct FCellModifierName
-//{
-//	GENERATED_BODY();
-//
-//	UPROPERTY(EditAnywhere)
-//	TMap<FName, TSubclassOf<ACellModifier>> DefenseModifiers;
-//};
-
 /**
  * 
  */

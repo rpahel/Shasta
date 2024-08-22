@@ -12,6 +12,8 @@ class ACellModifier;
 class AEnemy;
 enum class EShastaPathType : uint8;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWorldCellSelfSignature, AWorldCell*, OutWorldCell);
+
 UENUM()
 enum class ECellType : uint8
 {
@@ -29,6 +31,10 @@ class SHASTA_API AWorldCell : public AActor
 	GENERATED_BODY()
 
 	friend class ACellManager;
+
+public:
+
+	FWorldCellSelfSignature OnRequestChangeDelegate;
 
 private:
 	//==== Exposed Fields ====
@@ -71,7 +77,12 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	int32 DistanceFromCenter = 0;
 
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
+	FName NewDefenseModifierName = "Default";
+
 	FTimerHandle EnemySpawnTimerHandle;
+	FTimerHandle CooldownTimerHandle;
+	FTimerHandle LifeTimeTimerHandle;
 
 public:
 	//==== Constructors ====
@@ -97,11 +108,18 @@ public:
 	ECellType GetCellType() const;
 	int32 GetDistanceFromCenter() const;
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
-	void ChangeCellModifier(const FName& CellModifierName);
+	void ApplyNewCellModifier();
+	void ChangeCellModifier(const FName& CellModifierName, bool ForceChange = false);
 	ACellModifier* GetCellModifier() const;
 	void StartSpawnEnemyTimer();
 	TArray<UPathComponent*> GetValidPaths(const FVector& StartPoint, EShastaPathType pathType, bool DeepSearch = false);
 	AWorldCell* GetCellInDirection(const FVector& Dir);
+	void SetNewDefenseModifierName(const FName& InName);
+
+#if WITH_EDITOR
+	UFUNCTION(CallInEditor, Category = "Shasta")
+	bool RequestChange(bool ForceChange = false);
+#endif // WITH_EDITOR
 
 	//==== Static Methods ====
 
