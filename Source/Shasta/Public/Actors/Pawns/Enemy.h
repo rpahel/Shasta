@@ -9,6 +9,7 @@
 class UPathComponent;
 class AWorldCell;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FEnemySignature);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FEnemyEnemySignature, AEnemy*, OutEnemy);
 
 UCLASS(
@@ -20,6 +21,12 @@ class SHASTA_API AEnemy : public APawn
 
 public:
 	FEnemyEnemySignature OnArrivedAtCenterDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FEnemySignature OnMovingDelegate;
+
+	UPROPERTY(BlueprintAssignable)
+	FEnemySignature OnStoppedDelegate;
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Shasta|Enemy")
