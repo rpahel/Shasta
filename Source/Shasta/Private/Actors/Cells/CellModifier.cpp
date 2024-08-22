@@ -31,6 +31,16 @@ void ACellModifier::SetParentCell(AWorldCell* WorldCell)
 	ParentCell = WorldCell;
 }
 
+float ACellModifier::GetCooldown() const
+{
+	return Cooldown;
+}
+
+float ACellModifier::GetLifeTime() const
+{
+	return LifeTime;
+}
+
 //====================================================================================
 //==== PRIVATE OVERRIDES
 //====================================================================================
@@ -67,7 +77,7 @@ void ACellModifier::BeginPlay()
 			}
 		};
 
-	UE_LOGFMT(LogTemp, Log, "{0} - {1} Paths found : ", GetName(), Paths.Num());
-	for (auto& path : Paths)
-		UE_LOGFMT(LogTemp, Log, "{1}", path->GetName());
+	//UE_LOGFMT(LogTemp, Log, "{0} - {1} Paths found : ", GetName(), Paths.Num());
+	//for (auto& path : Paths)
+	//	UE_LOGFMT(LogTemp, Log, "{1}", path->GetName());
 }

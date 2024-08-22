@@ -21,6 +21,12 @@ private:
 	UPROPERTY(EditDefaultsOnly, Category = "Shasta|Cell Defense")
 	TSoftObjectPtr<UMaterialInstance> CellIcon;
 
+	UPROPERTY(EditDefaultsOnly, Category = "Shasta|Cell Defense")
+	float Cooldown = 10;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Shasta|Cell Defense")
+	float LifeTime = 10;
+
 	//==== Hidden Fields ====
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Defense|Debug")
@@ -36,6 +42,8 @@ public:
 
 	const TArray<UPathComponent*>& GetPaths();
 	void SetParentCell(AWorldCell* WorldCell);
+	float GetCooldown() const;
+	float GetLifeTime() const;
 
 private:
 	//==== Overrides ====

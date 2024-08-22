@@ -118,8 +118,19 @@ const TMap<FIntPoint, TObjectPtr<AWorldCell>>& AWorldCell::GetNeighbors() const
 	return Neighbors;
 }
 
-void AWorldCell::ChangeCellModifier(const FName& CellModifierName)
+void AWorldCell::ApplyNewCellModifier()
 {
+	ChangeCellModifier(NewDefenseModifierName, true);
+	NewDefenseModifierName = "Default";
+}
+
+void AWorldCell::ChangeCellModifier(const FName& CellModifierName, bool ForceChange)
+{
+	if (!ForceChange && GetWorld()->GetTimerManager().IsTimerActive(CooldownTimerHandle))
+		return;
+
+	GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+
 	if (!CellModifiersDataAsset)
 		return;
 
@@ -139,6 +150,22 @@ void AWorldCell::ChangeCellModifier(const FName& CellModifierName)
 		{
 			CurrentCellModifier->SetParentCell(this);
 			CurrentCellModifier->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+
+			GetWorld()->GetTimerManager().SetTimer(CooldownTimerHandle, CurrentCellModifier->GetCooldown(), FTimerManagerTimerParameters());
+			
+			if (CellModifierName != "Default")
+			{
+				GetWorld()->GetTimerManager().SetTimer(
+					LifeTimeTimerHandle,
+					[this]()
+					{
+						SetNewDefenseModifierName("Default");
+						RequestChange(true);
+					},
+					CurrentCellModifier->GetLifeTime(),
+					false
+				);
+			}
 		}
 	}
 }
@@ -290,6 +317,11 @@ AWorldCell* AWorldCell::GetCellInDirection(const FVector& Dir)
 	return nullptr;
 }
 
+void AWorldCell::SetNewDefenseModifierName(const FName& InName)
+{
+	NewDefenseModifierName = InName;
+}
+
 //====================================================================================
 //==== PUBLIC STATIC METHODS
 //====================================================================================
@@ -378,6 +410,15 @@ void AWorldCell::EndPlay(EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 
 	GetWorld()->GetTimerManager().ClearTimer(EnemySpawnTimerHandle);
+}
+
+bool AWorldCell::RequestChange(bool ForceChange)
+{
+	if(!ForceChange && GetWorld()->GetTimerManager().IsTimerActive(CooldownTimerHandle))
+		return false;
+
+	OnRequestChangeDelegate.Broadcast(this);
+	return true;
 }
 
 #if WITH_EDITOR
@@ -511,8 +552,6 @@ void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& 
 			}
 		}
 	}
-
-	// Ajouter une verification pour les secteurs vides pour etre sur qu'il n'y a pas de cases voisines
 }
 
 TArray<AWorldCell*> AWorldCell::GenerateNeighbors(const TSubclassOf<AWorldCell>& InTemplate)
