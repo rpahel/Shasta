@@ -45,6 +45,9 @@ private:
 	bool bEnemySpawnPoint = false;
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
+	FVector2D EnemySpawnTimeMinMax = FVector2D(3, 7);
+
+	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
 	TSubclassOf<AEnemy> EnemyTemplate;
 
 	//==== Hidden Fields ====
@@ -63,9 +66,6 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
 	int32 DistanceFromCenter = 0;
-
-	UPROPERTY(VisibleAnywhere, Category = "Shasta|World Cell|Debug")
-	FVector2D EnemySpawnTimeMinMax = FVector2D(3, 7);
 
 	FTimerHandle EnemySpawnTimerHandle;
 
@@ -95,6 +95,9 @@ public:
 	const TMap<FIntPoint, TObjectPtr<AWorldCell>>& GetNeighbors() const;
 	void ChangeCellModifier(ECellType InCellType);
 	ACellModifier* GetCellModifier() const;
+	void StartSpawnEnemyTimer();
+	TArray<UPathComponent*> GetValidPaths(const FVector& StartPoint, EShastaPathType pathType, bool DeepSearch = false);
+	AWorldCell* GetCellInDirection(const FVector& Dir);
 
 	//==== Static Methods ====
 
@@ -106,6 +109,7 @@ private:
 	//==== Overrides ====
 
 	void BeginPlay() override;
+	void EndPlay(EEndPlayReason::Type EndPlayReason) override;
 
 #if WITH_EDITOR
 	void PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent) override;

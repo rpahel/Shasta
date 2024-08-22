@@ -57,7 +57,7 @@ void AWorldCell::PingNeighbors()
 
 void AWorldCell::RotateCellModifier()
 {
-	if(!CurrentCellModifier)
+	if (!CurrentCellModifier)
 		return;
 
 	CurrentCellModifier->SetActorRotation(CurrentCellModifier->GetActorQuat() * FRotator(0, 60, 0).Quaternion());
@@ -91,7 +91,7 @@ const TMap<FIntPoint, TObjectPtr<AWorldCell>>& AWorldCell::GetNeighbors() const
 
 void AWorldCell::ChangeCellModifier(ECellType InCellType)
 {
-	if(CurrentCellModifier)
+	if (CurrentCellModifier)
 		CurrentCellModifier->Destroy();
 
 	if (auto ptr = CellModifiersMap.Find(CellType))
@@ -109,6 +109,142 @@ void AWorldCell::ChangeCellModifier(ECellType InCellType)
 ACellModifier* AWorldCell::GetCellModifier() const
 {
 	return CurrentCellModifier;
+}
+
+void AWorldCell::StartSpawnEnemyTimer()
+{
+	if (!bEnemySpawnPoint)
+		return;
+
+	GetWorld()->GetTimerManager().SetTimer(
+		EnemySpawnTimerHandle,
+		[this]()
+		{
+			SpawnEnemy();
+		},
+		FMath::FRandRange(EnemySpawnTimeMinMax.X, EnemySpawnTimeMinMax.Y),
+		false
+	);
+}
+
+TArray<UPathComponent*> AWorldCell::GetValidPaths(const FVector& StartPoint, EShastaPathType pathType, bool DeepSearch)
+{
+	TArray<UPathComponent*> retArr;
+
+	if (!CurrentCellModifier)
+		return retArr;
+
+	for (auto& path : GetPathsOfType(pathType))
+	{
+		if (!path)
+			continue;
+
+		//const FSplinePoint point = path->GetSplinePointAt(0, ESplineCoordinateSpace::Local);
+		//const FVector pointPos = CurrentCellModifier->GetTransform().TransformPositionNoScale(point.Position);
+		const FVector pointPos = path->GetLocationAtTime(0, ESplineCoordinateSpace::World);
+		const FVector A = (StartPoint - GetActorLocation()).GetSafeNormal();
+		const FVector B = (pointPos - GetActorLocation()).GetSafeNormal();
+
+	#if WITH_EDITOR
+		DrawDebugPoint(
+			GetWorld(),
+			pointPos,
+			20,
+			FColor::Yellow,
+			false,
+			5,
+			10
+		);
+
+		DrawDebugLine(
+			GetWorld(),
+			GetActorLocation(),
+			GetActorLocation() + A * CellRadius,
+			FColor::Cyan,
+			false,
+			5,
+			10,
+			5
+		);
+
+		DrawDebugLine(
+			GetWorld(),
+			GetActorLocation(),
+			GetActorLocation() + B * CellRadius,
+			FColor::Magenta,
+			false,
+			5,
+			10,
+			5
+		);
+	#endif // WITH_EDITOR
+
+		// A and B cant be more than 30° apart
+		if (A.Dot(B) < cos(FMath::DegreesToRadians(30)))
+			continue;
+
+		// Path starts at StartPoint.
+		// Now we have to check if PathEndPoint leads to another valid tile if DeepSeach is true.
+
+		if (!DeepSearch)
+		{
+			retArr.Add(path);
+			continue;
+		}
+
+		const FVector endPos = path->GetLocationAtTime(1, ESplineCoordinateSpace::World);
+		AWorldCell* cell = GetCellInDirection(endPos - GetActorLocation());
+
+		if (!cell)
+			continue;
+
+		if (cell->CellType == ECellType::Center)
+		{
+			retArr.Add(path);
+			continue;
+		}
+
+		if (cell->CellType != ECellType::Defense)
+			continue;
+
+		if (cell->GetValidPaths(endPos, pathType).IsEmpty())
+			continue;
+
+		retArr.Add(path);
+	}
+
+#if WITH_EDITOR
+	for (auto& path : retArr)
+	{
+		DrawDebugPoint(
+			GetWorld(),
+			path->GetLocationAtTime(0, ESplineCoordinateSpace::World),
+			20,
+			FColor::Red,
+			false,
+			5,
+			10
+		);
+	}
+#endif // WITH_EDITOR
+
+	return retArr;
+}
+
+AWorldCell* AWorldCell::GetCellInDirection(const FVector& Dir)
+{
+	for (auto& pair : Neighbors)
+	{
+		if (!pair.Value)
+			continue;
+
+		if (Dir.Dot((pair.Value->GetActorLocation() - GetActorLocation()).GetSafeNormal()) > cos(FMath::DegreesToRadians(30)))
+		{
+			return pair.Value;
+		}
+	}
+
+	return nullptr;
 }
 
 //====================================================================================
@@ -138,6 +274,8 @@ FIntPoint AWorldCell::GetAdjacentSectorClockwise(const FIntPoint& Sector)
 void AWorldCell::BeginPlay()
 {
 	Super::BeginPlay();
+
+	StartSpawnEnemyTimer();
 
 #if WITH_EDITOR
 	if (bDrawDebugs)
@@ -194,6 +332,13 @@ void AWorldCell::BeginPlay()
 
 }
 
+void AWorldCell::EndPlay(EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	GetWorld()->GetTimerManager().ClearTimer(EnemySpawnTimerHandle);
+}
+
 #if WITH_EDITOR
 void AWorldCell::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEvent)
 {
@@ -210,93 +355,48 @@ void AWorldCell::PostEditChangeProperty(FPropertyChangedEvent& PropertyChangedEv
 
 void AWorldCell::SpawnEnemy()
 {
-	if(!EnemyTemplate || !bEnemySpawnPoint)
+	if (!EnemyTemplate || !bEnemySpawnPoint)
 		return;
+	
+	TArray<TPair<AWorldCell*, TArray<UPathComponent*>>> candidates;
 
-	// Check if a neighbor can welcome an enemy by checking for a path that starts near this cell
 	for (auto& pair : Neighbors)
 	{
-		if(!pair.Value || pair.Value->CellType != ECellType::Defense)
+		if(!pair.Value)
 			continue;
 
-		for (auto& path : pair.Value->GetPathsOfType(EShastaPathType::Ground))
-		{
-			if(!path)
-				continue;
+		TArray<UPathComponent*> paths = pair.Value->GetValidPaths(GetActorLocation() + (pair.Value->GetActorLocation() - GetActorLocation()) * 0.5f, EShastaPathType::Ground, true);
 
-			if(!pair.Value->CurrentCellModifier)
-				continue;
+		if(paths.IsEmpty())
+			continue;
 
-			const FSplinePoint point = path->GetSplinePointAt(0, ESplineCoordinateSpace::Local);
-			const FVector pointPos = pair.Value->CurrentCellModifier->GetTransform().TransformPositionNoScale(point.Position);
-			const FVector A = (GetActorLocation() - pair.Value->GetActorLocation()).GetSafeNormal();
-			const FVector B = (pointPos - pair.Value->GetActorLocation()).GetSafeNormal();
-
-#if WITH_EDITOR
-			DrawDebugPoint(
-				GetWorld(),
-				pointPos,
-				20,
-				FColor::Yellow,
-				false,
-				5,
-				10
-			);
-
-			DrawDebugLine(
-				GetWorld(),
-				pair.Value->GetActorLocation(),
-				pair.Value->GetActorLocation() + A * CellRadius,
-				FColor::Cyan,
-				false,
-				5,
-				10,
-				5
-			);
-
-			DrawDebugLine(
-				GetWorld(),
-				pair.Value->GetActorLocation(),
-				pair.Value->GetActorLocation() + B * CellRadius,
-				FColor::Magenta,
-				false,
-				5,
-				10,
-				5
-			);
-#endif // WITH_EDITOR
-
-			// A and B cant be more than 30° apart
-			if(A.Dot(B) < cos(FMath::DegreesToRadians(30)))
-				continue;
-
-#if WITH_EDITOR
-			DrawDebugPoint(
-				GetWorld(),
-				pointPos,
-				20,
-				FColor::Red,
-				false,
-				5,
-				10
-			);
-#endif // WITH_EDITOR
-
-			FActorSpawnParameters params;
-			params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
-			if (AEnemy* enemy = GetWorld()->SpawnActor<AEnemy>(EnemyTemplate, pointPos, FRotator(), params))
-				enemy->TeleportOnPath(pair.Value, path);
-		}
+		candidates.Add({ pair.Value, paths });
 	}
+
+	if (candidates.IsEmpty())
+	{
+		StartSpawnEnemyTimer();
+		return;
+	}
+
+	TPair<AWorldCell*, TArray<UPathComponent*>> chosenPair = candidates[FMath::RandHelper(candidates.Num())];
+	UPathComponent* chosenPath = chosenPair.Value[FMath::RandHelper(chosenPair.Value.Num())];
+
+	FActorSpawnParameters params;
+	params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
+	if (AEnemy* enemy = GetWorld()->SpawnActor<AEnemy>(EnemyTemplate, chosenPath->GetLocationAtTime(0, ESplineCoordinateSpace::World), FRotator(), params))
+		enemy->TeleportOnPath(chosenPair.Key, chosenPath);
+
+	StartSpawnEnemyTimer();
 }
 
 TArray<UPathComponent*> AWorldCell::GetPaths() const
 {
 	TArray<UPathComponent*> ret;
 
-	if(!CurrentCellModifier)
+	if (!CurrentCellModifier)
 		return ret;
-	
+
 	return CurrentCellModifier->GetPaths();
 }
 
@@ -324,7 +424,7 @@ void AWorldCell::SetDistanceFromCenter(int Distance)
 
 void AWorldCell::IntroduceAsNeighbor(AWorldCell* NeighborCell, const FIntPoint& NeighborSector)
 {
-	if(!NeighborCell)
+	if (!NeighborCell)
 		return;
 
 	TObjectPtr<AWorldCell>* neighborPtr = Neighbors.Find(NeighborSector);

@@ -52,6 +52,8 @@ void AEnemy::ProgressOnPath(float DeltaTime)
 	{ 
 		OnFinishedPath.Broadcast(this);
 		bCanMove = false;
+
+		Destroy();
 		return;
 	}
 
