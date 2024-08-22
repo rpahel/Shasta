@@ -45,6 +45,11 @@ void AEnemy::BeginPlay()
 
 void AEnemy::EndPlay(EEndPlayReason::Type EndReason)
 {
+	Super::EndPlay(EndReason);
+
+	OnMovingDelegate.Clear();
+	OnStoppedDelegate.Clear();
+	OnArrivedAtCenterDelegate.Clear();
 	GetWorld()->GetTimerManager().ClearTimer(PathSearchTimerHandle);
 }
 
@@ -54,9 +59,10 @@ void AEnemy::Tick(float DeltaTime)
 
 	ProgressOnPath(DeltaTime);
 
-	// Securite
 	if (!bCanMove)
 	{
+		OnStoppedDelegate.Broadcast();
+
 		IdleTimer += DeltaTime;
 		if(IdleTimer >= 30)
 			Destroy();
@@ -106,6 +112,7 @@ void AEnemy::ProgressOnPath(float DeltaTime)
 		return;
 	}
 
+	OnMovingDelegate.Broadcast();
 	CurrentPathProgress += DeltaTime * SpeedFactor;
 	const FVector loc = CurrentPath->GetLocationAtTime(CurrentPathProgress, ESplineCoordinateSpace::World);
 	const FQuat rot = CurrentPath->GetTangentAtTime(CurrentPathProgress, ESplineCoordinateSpace::World).ToOrientationQuat();
