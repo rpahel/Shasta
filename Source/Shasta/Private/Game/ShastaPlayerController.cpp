@@ -35,7 +35,8 @@ void AShastaPlayerController::BeginPlay()
 	if (UGameUserSettings* settings = GEngine->GetGameUserSettings())
 	{
 		settings->SetFullscreenMode(EWindowMode::Fullscreen);
-		settings->SetOverallScalabilityLevel(3);
+		settings->SetOverallScalabilityLevel(2);
+		settings->SetResolutionScaleNormalized(1);
 		settings->ApplySettings(false);
 	}
 }

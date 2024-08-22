@@ -39,10 +39,8 @@ private:
 public:
 	//==== Methods ====
 
-#if WITH_EDITOR
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void PlayTransition();
-#endif
 
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void BeginEnemySpawn();

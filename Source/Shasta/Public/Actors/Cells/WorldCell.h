@@ -96,10 +96,8 @@ public:
 	void PingNeighbors();
 #endif
 
-#if WITH_EDITOR
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void RotateCellModifier();
-#endif
 
 	UFUNCTION(BlueprintCallable)
 	float GetCellRadius() const;
@@ -116,10 +114,8 @@ public:
 	AWorldCell* GetCellInDirection(const FVector& Dir);
 	void SetNewDefenseModifierName(const FName& InName);
 
-#if WITH_EDITOR
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	bool RequestChange(bool ForceChange = false);
-#endif // WITH_EDITOR
 
 	//==== Static Methods ====
 
