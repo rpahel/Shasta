@@ -6,6 +6,8 @@
 #include "Actors/Cells/CellModifier.h"
 #include "ActorComponents/Movement/PathComponent.h"
 
+#include "Components/CapsuleComponent.h"
+
 AEnemy::AEnemy()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -32,9 +34,23 @@ void AEnemy::TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path)
 	CurrentPathProgress = 0;
 }
 
-void AEnemy::Die()
+void AEnemy::Die(const FVector& PushDir)
 {
 	GetWorld()->GetTimerManager().ClearTimer(PathSearchTimerHandle);
+
+	if (UCapsuleComponent* collider = GetComponentByClass<UCapsuleComponent>())
+	{
+		collider->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+	}
+
+	if (USkeletalMeshComponent* skeleton = GetComponentByClass<USkeletalMeshComponent>())
+	{
+		skeleton->SetCollisionEnabled(ECollisionEnabled::PhysicsOnly);
+		skeleton->SetSimulatePhysics(true);
+		skeleton->AddImpulse(PushDir * 1000);
+	}
+
+	SetLifeSpan(10);
 	bCanMove = false;
 }
 

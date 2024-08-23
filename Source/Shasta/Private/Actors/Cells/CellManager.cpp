@@ -37,12 +37,23 @@ void ACellManager::BeginEnemySpawn()
 
 		cell->StartSpawnEnemyTimer();
 	}
+
+	OnBeginEnemySpawn.Broadcast();
 }
 
 bool ACellManager::IsCurrentCellInCooldown(const FVector& InLocation) const
 {
 	AWorldCell* found = GetCellAt(InLocation);
-	return found->IsInCooldown();
+
+	if (found->IsInCooldown())
+	{
+		if(found->GetCellType() == ECellType::Defense)
+			OnCooldownCheckTriggered.Broadcast();
+
+		return true;
+	}
+
+	return false;
 }
 
 void ACellManager::ChangeCurrentCellTo(const FVector& InLocation, const FName& ModifierName)
@@ -55,17 +66,6 @@ void ACellManager::ChangeCurrentCellTo(const FVector& InLocation, const FName& M
 AWorldCell* ACellManager::GetCellAt(const FVector& InLocation) const
 {
 	const FVector adjusted(InLocation.X, InLocation.Y, 0);
-
-	DrawDebugSphere(
-		GetWorld(),
-		adjusted,
-		50,
-		16,
-		FColor::Red,
-		true,
-		-1,
-		50
-	);
 
 	AWorldCell* returnCell = nullptr;
 	float lowestSize = CellDistance * CellDistance;
@@ -80,17 +80,6 @@ AWorldCell* ACellManager::GetCellAt(const FVector& InLocation) const
 			lowestSize = size;
 		}
 	}
-
-	DrawDebugSphere(
-		GetWorld(),
-		returnCell->GetActorLocation(),
-		50,
-		16,
-		FColor::Cyan,
-		true,
-		-1,
-		50
-	);
 
 	return returnCell;
 }

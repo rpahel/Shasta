@@ -53,7 +53,7 @@ public:
 	AEnemy();
 
 	void TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path);
-	void Die();
+	void Die(const FVector& PushDir = FVector::UpVector);
 
 private:	
 	void BeginPlay() override;

@@ -9,15 +9,25 @@
 class AWorldCell;
 class ACellDissolver;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCellManagerSignature);
+
 /**
  * 
  */
 UCLASS(
+	BlueprintType,
 	AutoExpandCategories = ("Shasta|Cell Manager")
 )
 class SHASTA_API ACellManager : public AActor
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FCellManagerSignature OnBeginEnemySpawn;
+
+	UPROPERTY(BlueprintAssignable)
+	FCellManagerSignature OnCooldownCheckTriggered;
 
 private:
 	//==== Exposed Fields ====

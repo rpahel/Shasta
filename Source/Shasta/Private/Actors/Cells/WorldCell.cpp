@@ -10,6 +10,7 @@
 #include "Curves/CurveVector.h"
 #include "Components/ShapeComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Engine/OverlapResult.h"
 #include <Logging/StructuredLog.h>
 
 //====================================================================================
@@ -165,6 +166,22 @@ void AWorldCell::ChangeCellModifier(const FName& CellModifierName, bool ForceCha
 					false
 				);
 			}
+		}
+	}
+
+	TArray<FOverlapResult> overlaps;
+	if (GetWorld()->OverlapMultiByChannel(
+		overlaps,
+		GetActorLocation(),
+		FQuat(),
+		ECollisionChannel::ECC_GameTraceChannel2,
+		FCollisionShape::MakeSphere(GetCellRadius())
+	))
+	{
+		for (auto& result : overlaps)
+		{
+			if (AEnemy* enemy = Cast<AEnemy>(result.GetActor()))
+				enemy->Die();
 		}
 	}
 }
