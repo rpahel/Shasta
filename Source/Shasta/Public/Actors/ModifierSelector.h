@@ -46,6 +46,9 @@ private:
 	TObjectPtr<AActor> OwnerActor;
 
 	UPROPERTY(VisibleAnywhere)
+	TObjectPtr<class ACellManager> CellManager;
+
+	UPROPERTY(VisibleAnywhere)
 	FVector CloseAnimationStartPos;
 
 public:	
@@ -53,7 +56,11 @@ public:
 	void SetOwnerActor(AActor* InOwner);
 	void Open();
 	void Close();
+	void Select(UPrimitiveComponent* Component);
+	bool IsInAnimation() const;
 
 private:
-	virtual void Tick(float DeltaTime) override;
+	void BeginPlay() override;
+	void Tick(float DeltaTime) override;
+	ACellManager* GetCellManager();
 };

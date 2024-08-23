@@ -51,6 +51,11 @@ void ACellDissolver::SetVisibilityTransform(bool IsVisible)
 	Pivot->SetRelativeTransform(IsVisible ? VisibleTransform : HiddenTransform);
 }
 
+bool ACellDissolver::IsInTransition() const
+{
+	return bInTransitionAnimation;
+}
+
 //====================================================================================
 //==== PRIVATE METHODS
 //====================================================================================
@@ -88,6 +93,12 @@ void ACellDissolver::UpdateAnimation(float DeltaTime)
 		}
 		else
 		{
+			if (!MidPointReached)
+			{
+				MidPointReached = true;
+				OnMidPointDelegate.Broadcast();
+			}
+
 			if (!bUseAdvancedCurves && AppearAnimationCurve)
 			{
 				Pivot->SetRelativeTransform(UKismetMathLibrary::TLerp(HiddenTransform, VisibleTransform, AppearAnimationCurve->GetFloatValue((CurrentTransitionTime - 0.5f) * 2)));
@@ -110,6 +121,7 @@ void ACellDissolver::UpdateAnimation(float DeltaTime)
 		{
 			CurrentTransitionTime = 0;
 			bInTransitionAnimation = false;
+			MidPointReached = false;
 			Pivot->SetRelativeTransform(VisibleTransform);
 		}
 	}

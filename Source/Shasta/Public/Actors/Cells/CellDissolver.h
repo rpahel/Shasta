@@ -9,6 +9,8 @@
 class UCurveFloat;
 class UCurveVector;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FCellDissolverSignature);
+
 /**
  * 
  */
@@ -18,6 +20,10 @@ UCLASS(
 class SHASTA_API ACellDissolver : public AActor
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FCellDissolverSignature OnMidPointDelegate;
 
 private:
 	//==== Exposed Fields ====
@@ -54,6 +60,9 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Dissolver|Debug")
 	bool bInTransitionAnimation = false;
 
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Dissolver|Debug")
+	bool MidPointReached = false;
+
 	//==== Components ===
 
 	UPROPERTY(VisibleAnywhere)
@@ -71,6 +80,7 @@ public:
 
 	void PlayTransition();
 	void SetVisibilityTransform(bool IsVisible);
+	bool IsInTransition() const;
 
 private:
 	//==== Overrides ====

@@ -113,6 +113,8 @@ public:
 	TArray<UPathComponent*> GetValidPaths(const FVector& StartPoint, EShastaPathType pathType, bool DeepSearch = false);
 	AWorldCell* GetCellInDirection(const FVector& Dir);
 	void SetNewDefenseModifierName(const FName& InName);
+	float GetDistanceToEdgeCenter() const;
+	bool IsInCooldown() const;
 
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	bool RequestChange(bool ForceChange = false);

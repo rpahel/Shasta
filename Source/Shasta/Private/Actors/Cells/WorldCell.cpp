@@ -159,8 +159,7 @@ void AWorldCell::ChangeCellModifier(const FName& CellModifierName, bool ForceCha
 					LifeTimeTimerHandle,
 					[this]()
 					{
-						SetNewDefenseModifierName("Default");
-						RequestChange(true);
+						ChangeCellModifier("Default", true);
 					},
 					CurrentCellModifier->GetLifeTime(),
 					false
@@ -320,6 +319,24 @@ AWorldCell* AWorldCell::GetCellInDirection(const FVector& Dir)
 void AWorldCell::SetNewDefenseModifierName(const FName& InName)
 {
 	NewDefenseModifierName = InName;
+}
+
+float AWorldCell::GetDistanceToEdgeCenter() const
+{
+	for (auto& pair : SideCenters)
+	{
+		return pair.Value.Size() * CellRadius;
+	}
+
+	return -1;
+}
+
+bool AWorldCell::IsInCooldown() const
+{
+	if(CellType == ECellType::Border || CellType == ECellType::Center)
+		return true;
+
+	return GetWorld()->GetTimerManager().IsTimerActive(CooldownTimerHandle);
 }
 
 //====================================================================================

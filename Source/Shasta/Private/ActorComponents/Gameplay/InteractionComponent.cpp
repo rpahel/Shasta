@@ -50,7 +50,9 @@ void UInteractionComponent::InteractCallback(const FInputActionInstance& InputIn
 	{
 		if (hit.GetComponent() && hit.GetComponent()->ComponentHasTag("ModifierSelector"))
 		{
-			ModifierSelector->Close();
+			if(!ModifierSelector->IsInAnimation())
+				ModifierSelector->Select(hit.GetComponent());
+
 			return;
 		}
 	}

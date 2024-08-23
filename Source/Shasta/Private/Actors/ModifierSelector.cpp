@@ -2,6 +2,8 @@
 
 
 #include "Actors/ModifierSelector.h"
+#include "Actors/Cells/CellManager.h"
+#include "Kismet/GameplayStatics.h"
 
 AModifierSelector::AModifierSelector()
 {
@@ -16,6 +18,9 @@ void AModifierSelector::SetOwnerActor(AActor* InOwner)
 
 void AModifierSelector::Open()
 {
+	if(CellManager->IsInTransition())
+		return;
+
 	bIsOpen = true;
 	bInAnimation = true;
 	AnimationProgress = 0;
@@ -30,6 +35,34 @@ void AModifierSelector::Close()
 	AnimationProgress = 0;
 	CloseAnimationStartPos = GetActorLocation();
 	OnCloseDelegate.Broadcast();
+}
+
+void AModifierSelector::Select(UPrimitiveComponent* Component)
+{
+	if(!Component)
+		return;
+
+	if (Component->ComponentHasTag("Mount"))
+	{
+		CellManager->ChangeCurrentCellTo(GetActorLocation(), "Mount");
+	}
+	else if (Component->ComponentHasTag("Hole"))
+	{
+		CellManager->ChangeCurrentCellTo(GetActorLocation(), "Hole");
+	}
+
+	Close();
+}
+
+bool AModifierSelector::IsInAnimation() const
+{
+	return bInAnimation;
+}
+
+void AModifierSelector::BeginPlay()
+{
+	Super::BeginPlay();
+	GetCellManager();
 }
 
 void AModifierSelector::Tick(float DeltaTime)
@@ -67,6 +100,10 @@ void AModifierSelector::Tick(float DeltaTime)
 		{
 			SetActorLocation(ownerPos + OwnerActor->GetActorForwardVector() * 100);
 			bInAnimation = false;
+
+			if(GetCellManager()->IsCurrentCellInCooldown(myPos))
+				Close();
+
 			return;
 		}
 		else
@@ -90,5 +127,13 @@ void AModifierSelector::Tick(float DeltaTime)
 	}
 
 	AnimationProgress += DeltaTime / AnimationTime;
+}
+
+ACellManager* AModifierSelector::GetCellManager()
+{
+	if(CellManager)
+		return CellManager;
+
+	return (CellManager = Cast<ACellManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellManager::StaticClass())));
 }
 

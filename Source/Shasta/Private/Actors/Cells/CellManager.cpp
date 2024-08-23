@@ -18,6 +18,16 @@ void ACellManager::PlayTransition()
 		CellDissolver->PlayTransition();
 }
 
+void ACellManager::PlayTransition(AWorldCell* InCell)
+{
+	CellDissolver->SetActorLocation(InCell->GetActorLocation());
+
+	if (CellDissolver)
+		CellDissolver->PlayTransition();
+
+	CellToChange = InCell;
+}
+
 void ACellManager::BeginEnemySpawn()
 {
 	for (auto& cell : WorldCellArray)
@@ -29,9 +39,77 @@ void ACellManager::BeginEnemySpawn()
 	}
 }
 
+bool ACellManager::IsCurrentCellInCooldown(const FVector& InLocation) const
+{
+	AWorldCell* found = GetCellAt(InLocation);
+	return found->IsInCooldown();
+}
+
+void ACellManager::ChangeCurrentCellTo(const FVector& InLocation, const FName& ModifierName)
+{
+	AWorldCell* found = GetCellAt(InLocation);
+	found->SetNewDefenseModifierName(ModifierName);
+	PlayTransition(found);
+}
+
+AWorldCell* ACellManager::GetCellAt(const FVector& InLocation) const
+{
+	const FVector adjusted(InLocation.X, InLocation.Y, 0);
+
+	DrawDebugSphere(
+		GetWorld(),
+		adjusted,
+		50,
+		16,
+		FColor::Red,
+		true,
+		-1,
+		50
+	);
+
+	AWorldCell* returnCell = nullptr;
+	float lowestSize = CellDistance * CellDistance;
+
+	for (auto& cell : WorldCellArray)
+	{
+		float size = (cell->GetActorLocation() - adjusted).SizeSquared();
+
+		if (size <= lowestSize)
+		{
+			returnCell = cell;
+			lowestSize = size;
+		}
+	}
+
+	DrawDebugSphere(
+		GetWorld(),
+		returnCell->GetActorLocation(),
+		50,
+		16,
+		FColor::Cyan,
+		true,
+		-1,
+		50
+	);
+
+	return returnCell;
+}
+
+bool ACellManager::IsInTransition() const
+{
+	return CellDissolver->IsInTransition();
+}
+
 void ACellManager::BeginPlay()
 {
 	CellDissolver = Cast<ACellDissolver>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellDissolver::StaticClass()));
+	CellDissolver->OnMidPointDelegate.AddUniqueDynamic(this, &ACellManager::OnDissolverMidPointCallback);
+
+	for (auto& cell : WorldCellArray)
+	{
+		CellDistance = cell->GetDistanceToEdgeCenter() * 2;
+		break;
+	}
 }
 
 void ACellManager::GenerateCells()
@@ -85,4 +163,10 @@ void ACellManager::GenerateCells()
 		cell->SetFolderPath(FName(FString::Printf(TEXT("World Cells/Ring %d"), distance)));
 #endif // WITH_EDITOR
 	}
+}
+
+void ACellManager::OnDissolverMidPointCallback()
+{
+	CellToChange->ApplyNewCellModifier();
+	CellToChange = nullptr;
 }

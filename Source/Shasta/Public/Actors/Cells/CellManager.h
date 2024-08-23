@@ -36,14 +36,27 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Manager|Debug")
 	TObjectPtr<ACellDissolver> CellDissolver;
 
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Manager|Debug")
+	float CellDistance;
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Manager|Debug")
+	TObjectPtr<AWorldCell> CellToChange;
+
 public:
 	//==== Methods ====
 
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void PlayTransition();
 
+	void PlayTransition(AWorldCell* InCell);
+
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void BeginEnemySpawn();
+
+	bool IsCurrentCellInCooldown(const FVector& InLocation) const;
+	void ChangeCurrentCellTo(const FVector& InLocation, const FName& ModifierName);
+	AWorldCell* GetCellAt(const FVector& InLocation) const;
+	bool IsInTransition() const;
 
 private:
 	//==== Overrides ====
@@ -54,4 +67,9 @@ private:
 
 	UFUNCTION(CallInEditor, Category = "Shasta")
 	void GenerateCells();
+
+	//==== Event Handlers ====
+
+	UFUNCTION()
+	void OnDissolverMidPointCallback();
 };
