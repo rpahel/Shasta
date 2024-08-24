@@ -2,6 +2,7 @@
 
 
 #include "Actors/Pawns/Enemy.h"
+#include "Actors/Pawns/ShastaPlayerPawn.h"
 #include "Actors/Cells/WorldCell.h"
 #include "Actors/Cells/CellModifier.h"
 #include "ActorComponents/Movement/PathComponent.h"
@@ -110,8 +111,15 @@ void AEnemy::ProgressOnPath(float DeltaTime)
 		if (nextCell->GetCellType() == ECellType::Center)
 		{
 			OnArrivedAtCenterDelegate.Broadcast(this);
+
 			SetActorLocation(nextCell->GetActorLocation() - dir * 250);
 			SetActorRotation(FVector::VectorPlaneProject(dir, FVector::UpVector).ToOrientationQuat());
+
+			if (AShastaPlayerPawn* player = Cast<AShastaPlayerPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), AShastaPlayerPawn::StaticClass())))
+			{
+				player->Lose(GetActorLocation());
+			}
+
 			return;
 		}
 

@@ -3,6 +3,7 @@
 #include "Actors/Pawns/ShastaPlayerPawn.h"
 #include "ActorComponents/Movement/PlayerMovementComponent.h"
 #include "ActorComponents/Camera/PlayerCameraComponent.h"
+#include "ActorComponents/Gameplay/InteractionComponent.h"
 #include "Interfaces/InputsDependentInterface.h"
 
 #include "Components/SphereComponent.h"
@@ -28,6 +29,24 @@ AShastaPlayerPawn::AShastaPlayerPawn()
 	PlayerMovement = CreateDefaultSubobject<UPlayerMovementComponent>("Player Movement Component");
 }
 
+void AShastaPlayerPawn::Lose(const FVector& AttackerLocation)
+{
+	if(bLost)
+		return;
+
+	PlayerMovement->SetCanMove(false);
+
+	if (UInteractionComponent* interactionComp = GetComponentByClass<UInteractionComponent>())
+		interactionComp->SetCanOpenMenu(false);
+
+	SetActorLocation(AttackerLocation + FVector::UpVector * 500 + AttackerLocation.GetSafeNormal() * 500);
+	SetActorRotation((-GetActorLocation()).ToOrientationQuat());
+
+	OnLost.Broadcast();
+
+	bLost = true;
+}
+
 //====================================================================================
 //==== PUBLIC METHODS
 //====================================================================================
@@ -39,4 +58,11 @@ void AShastaPlayerPawn::BindInputActions(UEnhancedInputComponent* InInputCompone
 		if (auto inputDepComp = Cast<IInputsDependentInterface>(comp))
 			inputDepComp->BindInputActions(InInputComponent);
 	}
+}
+
+void AShastaPlayerPawn::EndPlay(EEndPlayReason::Type Reason)
+{
+	Super::EndPlay(Reason);
+
+	OnLost.Clear();
 }

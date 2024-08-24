@@ -12,10 +12,16 @@ class UPlayerMovementComponent;
 class USphereComponent;
 class UPlayerCameraComponent;
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FShastaPlayerPawnSignature);
+
 UCLASS()
 class SHASTA_API AShastaPlayerPawn : public APawn, public IInputsDependentInterface
 {
 	GENERATED_BODY()
+
+public:
+	UPROPERTY(BlueprintAssignable)
+	FShastaPlayerPawnSignature OnLost;
 
 private:
 	//==== Components ====
@@ -29,10 +35,19 @@ private:
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
 	TObjectPtr<UPlayerMovementComponent> PlayerMovement;
 
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Components")
+	bool bLost = false;
+
 public:
 	AShastaPlayerPawn();
+
+	void Lose(const FVector& AttackerLocation);
 
 	//==== IInputsDependent Implementation ====
 
 	virtual void BindInputActions(UEnhancedInputComponent* InInputComponent) override;
+
+private:
+
+	void EndPlay(EEndPlayReason::Type Reason) override;
 };
