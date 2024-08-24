@@ -23,21 +23,26 @@ class SHASTA_API UInteractionComponent : public UActorComponent, public IInputsD
 private:
 	//==== Exposed Fields ====
 
-	UPROPERTY(EditAnywhere, Category = "Shasta|Movement|Inputs")
+	UPROPERTY(EditAnywhere, Category = "Shasta|Gameplay|Inputs")
 	TSubclassOf<AModifierSelector> ModifierSelectorTemplate;
 
-	UPROPERTY(EditAnywhere, Category = "Shasta|Movement|Inputs")
+	UPROPERTY(EditAnywhere, Category = "Shasta|Gameplay|Inputs")
 	TObjectPtr<UInputAction> InteractAction = nullptr;
 
-	UPROPERTY(VisibleAnywhere, Category = "Shasta|Movement|Inputs")
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Gameplay|Inputs")
 	TObjectPtr<UInputAction> OpenMenuAction = nullptr;
 
 	//==== Hidden Fields ====
 
-	UPROPERTY(EditAnywhere, Category = "Shasta|Movement|Inputs")
+	UPROPERTY(EditAnywhere, Category = "Shasta|Gameplay|Inputs")
 	TObjectPtr<AModifierSelector> ModifierSelector = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = "Shasta|Gameplay|Inputs")
+	bool bCanOpenMenu = false;
+
 public:
+	void SetCanOpenMenu(bool CanOpenMenu);
+
 	//==== IInputsDependent Implementation ====
 
 	virtual void BindInputActions(UEnhancedInputComponent* InInputComponent) override;

@@ -3,6 +3,10 @@
 
 #include "Actors/WorldMenu.h"
 #include "Actors/WorldButton.h"
+#include "Actors/Cells/CellManager.h"
+#include "Actors/Pawns/ShastaPlayerPawn.h"
+#include "ActorComponents/Gameplay/InteractionComponent.h"
+#include "GameFramework/GameUserSettings.h"
 
 #include "Kismet/GameplayStatics.h"
 #include <Logging/StructuredLog.h>
@@ -36,40 +40,66 @@ void AWorldMenu::OnSelectCallback(EWorldButtonType InType)
 {
 	switch (InType)
 	{
-		case EWorldButtonType::None:
-		{
-			UE_LOGFMT(LogTemp, Log, "AWorldMenu::OnSelectCallback -> None Clicked.");
-			break;
-		}
-
 		case EWorldButtonType::Play:
 		{
-			UE_LOGFMT(LogTemp, Log, "AWorldMenu::OnSelectCallback -> Play Clicked.");
+			for (int i = Buttons.Num() - 1; i >= 0; i--)
+				Buttons[i]->Destroy();
+
+			Buttons.Empty();
+
+			if(ACellManager* manager = Cast<ACellManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellManager::StaticClass())))
+				manager->BeginEnemySpawn();
+
+			if (AShastaPlayerPawn* player = Cast<AShastaPlayerPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), AShastaPlayerPawn::StaticClass())))
+			{
+				if (UInteractionComponent* interactComp = player->GetComponentByClass<UInteractionComponent>())
+				{
+					interactComp->SetCanOpenMenu(true);
+				}
+			}
+
 			break;
 		}
 
 		case EWorldButtonType::Quit:
 		{
-			UE_LOGFMT(LogTemp, Log, "AWorldMenu::OnSelectCallback -> Quit Clicked.");
 			UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, false);
 			break;
 		}
 
 		case EWorldButtonType::LowQuality:
 		{
-			UE_LOGFMT(LogTemp, Log, "AWorldMenu::OnSelectCallback -> LowQuality Clicked.");
+			if (UGameUserSettings* settings = GEngine->GetGameUserSettings())
+			{
+				settings->SetOverallScalabilityLevel(0);
+				settings->SetResolutionScaleNormalized(0.9f);
+				settings->ApplySettings(false);
+			}
+
 			break;
 		}
 
 		case EWorldButtonType::MediumQuality:
 		{
-			UE_LOGFMT(LogTemp, Log, "AWorldMenu::OnSelectCallback -> MediumQuality Clicked.");
+			if (UGameUserSettings* settings = GEngine->GetGameUserSettings())
+			{
+				settings->SetOverallScalabilityLevel(1);
+				settings->SetResolutionScaleNormalized(0.95f);
+				settings->ApplySettings(false);
+			}
+
 			break;
 		}
 
 		case EWorldButtonType::HighQuality:
 		{
-			UE_LOGFMT(LogTemp, Log, "AWorldMenu::OnSelectCallback -> HighQuality Clicked.");
+			if (UGameUserSettings* settings = GEngine->GetGameUserSettings())
+			{
+				settings->SetOverallScalabilityLevel(2);
+				settings->SetResolutionScaleNormalized(1);
+				settings->ApplySettings(false);
+			}
+
 			break;
 		}
 

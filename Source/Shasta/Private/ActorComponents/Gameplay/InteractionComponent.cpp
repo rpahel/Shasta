@@ -9,6 +9,11 @@
 //==== IINPUTSDEPENDENT IMPLEMENTATION
 //====================================================================================
 
+void UInteractionComponent::SetCanOpenMenu(bool CanOpenMenu)
+{
+	bCanOpenMenu = CanOpenMenu;
+}
+
 void UInteractionComponent::BindInputActions(UEnhancedInputComponent* InInputComponent)
 {
 	if (!InInputComponent)
@@ -45,7 +50,7 @@ void UInteractionComponent::InteractCallback(const FInputActionInstance& InputIn
 {
 	FHitResult hit;
 	const FVector start = GetOwner()->GetActorLocation();
-	const FVector end = GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 500;
+	const FVector end = GetOwner()->GetActorLocation() + GetOwner()->GetActorForwardVector() * 1000;
 
 	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECollisionChannel::ECC_GameTraceChannel1))
 	{
@@ -63,5 +68,6 @@ void UInteractionComponent::InteractCallback(const FInputActionInstance& InputIn
 
 void UInteractionComponent::OpenMenuCallback(const FInputActionInstance& InputInstance)
 {
-	ModifierSelector->Open();
+	if(bCanOpenMenu)
+		ModifierSelector->Open();
 }
