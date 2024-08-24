@@ -22,6 +22,9 @@ public:
 
 private:
 	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<class USoundWave> ModifierSelectorSound;
+
+	UPROPERTY(EditAnywhere)
 	float CloseDistance = 300;
 
 	UPROPERTY(EditAnywhere)

@@ -18,7 +18,7 @@ void AModifierSelector::SetOwnerActor(AActor* InOwner)
 
 void AModifierSelector::Open()
 {
-	if(CellManager->IsInTransition())
+	if (CellManager->IsInTransition())
 		return;
 
 	bIsOpen = true;
@@ -26,6 +26,7 @@ void AModifierSelector::Open()
 	AnimationProgress = 0;
 	SetActorHiddenInGame(false);
 	OnOpenDelegate.Broadcast();
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ModifierSelectorSound.LoadSynchronous(), OwnerActor->GetActorLocation());
 }
 
 void AModifierSelector::Close()
@@ -35,6 +36,7 @@ void AModifierSelector::Close()
 	AnimationProgress = 0;
 	CloseAnimationStartPos = GetActorLocation();
 	OnCloseDelegate.Broadcast();
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ModifierSelectorSound.LoadSynchronous(), GetActorLocation());
 }
 
 void AModifierSelector::Select(UPrimitiveComponent* Component)
