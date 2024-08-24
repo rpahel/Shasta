@@ -52,6 +52,9 @@ private:
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "bUseAdvancedCurves", EditConditionHides), Category = "Shasta|Cell Dissolver")
 	TObjectPtr<UCurveVector> AppearAdvancedAnimationCurve = nullptr;
 
+	UPROPERTY(EditAnywhere, Category = "Shasta|Cell Dissolver")
+	TSoftObjectPtr<USoundWave> TransitionSound;
+
 	//==== Hidden Fields ====
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Dissolver|Debug")
@@ -62,6 +65,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Dissolver|Debug")
 	bool MidPointReached = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Cell Dissolver|Debug")
+	TObjectPtr<UAudioComponent> CurrentAudioComponent = nullptr;
 
 	//==== Components ===
 

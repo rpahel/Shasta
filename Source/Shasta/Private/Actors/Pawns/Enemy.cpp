@@ -7,6 +7,8 @@
 #include "ActorComponents/Movement/PathComponent.h"
 
 #include "Components/CapsuleComponent.h"
+#include "Components/AudioComponent.h"
+#include <Kismet/GameplayStatics.h>
 
 AEnemy::AEnemy()
 {
@@ -32,6 +34,11 @@ void AEnemy::TeleportOnPath(AWorldCell* WorldCell, UPathComponent* Path)
 
 	bCanMove = true;
 	CurrentPathProgress = 0;
+
+	if(!AudioComponent)
+		AudioComponent = UGameplayStatics::SpawnSoundAttached(WalkSound.LoadSynchronous(), GetRootComponent());
+	else
+		AudioComponent->Play();
 }
 
 void AEnemy::Die(const FVector& PushDir)
@@ -77,6 +84,9 @@ void AEnemy::Tick(float DeltaTime)
 
 	if (!bCanMove)
 	{
+		if(AudioComponent)
+			AudioComponent->Stop();
+
 		OnStoppedDelegate.Broadcast();
 
 		IdleTimer += DeltaTime;

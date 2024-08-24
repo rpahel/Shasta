@@ -11,6 +11,7 @@
 #include "Components/ShapeComponent.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "Engine/OverlapResult.h"
+#include "Kismet/GameplayStatics.h"
 #include <Logging/StructuredLog.h>
 
 //====================================================================================
@@ -184,6 +185,8 @@ void AWorldCell::ChangeCellModifier(const FName& CellModifierName, bool ForceCha
 				enemy->Die();
 		}
 	}
+
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ChangeModifierSound.LoadSynchronous(), GetActorLocation());
 }
 
 ACellModifier* AWorldCell::GetCellModifier() const

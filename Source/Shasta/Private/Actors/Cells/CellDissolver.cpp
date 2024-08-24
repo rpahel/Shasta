@@ -6,6 +6,8 @@
 #include <Curves/CurveVector.h>
 #include <Kismet/KismetMathLibrary.h>
 #include <Logging/StructuredLog.h>
+#include <Kismet/GameplayStatics.h>
+#include "Components/AudioComponent.h"
 
 //====================================================================================
 //==== PUBLIC METHODS
@@ -44,6 +46,14 @@ void ACellDissolver::PlayTransition()
 	Pivot->SetRelativeTransform(VisibleTransform);
 	bInTransitionAnimation = true;
 	CurrentTransitionTime = 0;
+
+	if(!CurrentAudioComponent)
+		CurrentAudioComponent = UGameplayStatics::SpawnSoundAtLocation(GetWorld(), TransitionSound.LoadSynchronous(), GetActorLocation());
+	else
+	{
+		CurrentAudioComponent->SetWorldLocation(GetActorLocation());
+		CurrentAudioComponent->Play();
+	}
 }
 
 void ACellDissolver::SetVisibilityTransform(bool IsVisible)
@@ -123,6 +133,9 @@ void ACellDissolver::UpdateAnimation(float DeltaTime)
 			bInTransitionAnimation = false;
 			MidPointReached = false;
 			Pivot->SetRelativeTransform(VisibleTransform);
+
+			if(CurrentAudioComponent)
+				CurrentAudioComponent->Stop();
 		}
 	}
 }

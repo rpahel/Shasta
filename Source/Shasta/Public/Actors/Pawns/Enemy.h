@@ -32,6 +32,9 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Shasta|Enemy")
 	float SpeedFactor = 0.1f;
 
+	UPROPERTY(EditAnywhere, Category = "Shasta|Enemy")
+	TSoftObjectPtr<USoundWave> WalkSound = nullptr;
+
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Enemy|Debug")
 	TObjectPtr<AWorldCell> CurrentWorldCell;
 
@@ -46,6 +49,9 @@ private:
 	
 	UPROPERTY(VisibleAnywhere, Category = "Shasta|Enemy|Debug")
 	bool bCanMove = false;
+
+	UPROPERTY(VisibleAnywhere, Category = "Shasta|Enemy|Debug")
+	TObjectPtr<UAudioComponent> AudioComponent;
 
 	FTimerHandle PathSearchTimerHandle;
 

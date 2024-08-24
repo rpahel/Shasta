@@ -33,7 +33,6 @@ class SHASTA_API AWorldCell : public AActor
 	friend class ACellManager;
 
 public:
-
 	FWorldCellSelfSignature OnRequestChangeDelegate;
 
 private:
@@ -59,6 +58,9 @@ private:
 
 	UPROPERTY(EditAnywhere, meta = (EditCondition = "CellType == ECellType::Border", EditConditionHides), Category = "Shasta|World Cell")
 	TSubclassOf<AEnemy> EnemyTemplate;
+
+	UPROPERTY(EditAnywhere, Category = "Shasta|World Cell")
+	TSoftObjectPtr<USoundWave> ChangeModifierSound;
 
 	//==== Hidden Fields ====
 
