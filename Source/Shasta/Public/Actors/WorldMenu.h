@@ -18,6 +18,12 @@ private:
 	UPROPERTY(VisibleAnywhere)
 	TArray<TObjectPtr<AWorldButton>> Buttons;
 
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<USoundWave> ButtonSelectSound;
+
+	UPROPERTY(EditAnywhere)
+	TSoftObjectPtr<USoundWave> StartGameMusic;
+
 public:	
 	AWorldMenu();
 

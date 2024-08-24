@@ -38,6 +38,11 @@ void AWorldMenu::BeginPlay()
 
 void AWorldMenu::OnSelectCallback(EWorldButtonType InType)
 {
+	if (InType != EWorldButtonType::None)
+	{
+		UGameplayStatics::PlaySound2D(GetWorld(), ButtonSelectSound.LoadSynchronous());
+	}
+
 	switch (InType)
 	{
 		case EWorldButtonType::Play:
@@ -47,23 +52,43 @@ void AWorldMenu::OnSelectCallback(EWorldButtonType InType)
 
 			Buttons.Empty();
 
-			if(ACellManager* manager = Cast<ACellManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellManager::StaticClass())))
-				manager->BeginEnemySpawn();
-
-			if (AShastaPlayerPawn* player = Cast<AShastaPlayerPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), AShastaPlayerPawn::StaticClass())))
-			{
-				if (UInteractionComponent* interactComp = player->GetComponentByClass<UInteractionComponent>())
+			FTimerHandle handle;
+			GetWorld()->GetTimerManager().SetTimer(
+				handle,
+				[this]()
 				{
-					interactComp->SetCanOpenMenu(true);
-				}
-			}
+					if (ACellManager* manager = Cast<ACellManager>(UGameplayStatics::GetActorOfClass(GetWorld(), ACellManager::StaticClass())))
+						manager->BeginEnemySpawn();
+
+					if (AShastaPlayerPawn* player = Cast<AShastaPlayerPawn>(UGameplayStatics::GetActorOfClass(GetWorld(), AShastaPlayerPawn::StaticClass())))
+					{
+						if (UInteractionComponent* interactComp = player->GetComponentByClass<UInteractionComponent>())
+						{
+							interactComp->SetCanOpenMenu(true);
+						}
+					}
+
+					UGameplayStatics::PlaySound2D(GetWorld(), StartGameMusic.LoadSynchronous());
+				},
+				2,
+				false
+			);
 
 			break;
 		}
 
 		case EWorldButtonType::Quit:
 		{
-			UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, false);
+			FTimerHandle handle;
+			GetWorld()->GetTimerManager().SetTimer(
+				handle,
+				[this]()
+				{
+					UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, false);
+				},
+				2,
+				false
+			);
 			break;
 		}
 
