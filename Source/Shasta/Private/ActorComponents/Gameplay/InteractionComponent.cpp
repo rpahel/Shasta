@@ -3,6 +3,7 @@
 
 #include "ActorComponents/Gameplay/InteractionComponent.h"
 #include "Actors/ModifierSelector.h"
+#include "Actors/WorldButton.h"
 
 //====================================================================================
 //==== IINPUTSDEPENDENT IMPLEMENTATION
@@ -52,9 +53,11 @@ void UInteractionComponent::InteractCallback(const FInputActionInstance& InputIn
 		{
 			if(!ModifierSelector->IsInAnimation())
 				ModifierSelector->Select(hit.GetComponent());
-
 			return;
 		}
+
+		if (AWorldButton* button = Cast<AWorldButton>(hit.GetActor()))
+			button->Interact();
 	}
 }
 

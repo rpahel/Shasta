@@ -6,11 +6,17 @@
 
 AWorldButton::AWorldButton()
 {
-	PrimaryActorTick.bCanEverTick = true;
+	PrimaryActorTick.bCanEverTick = false;
 
 	SetRootComponent((Collider = CreateDefaultSubobject<UBoxComponent>("Collider")));
 }
 
-void AWorldButton::DoTheThing()
+void AWorldButton::Interact()
 {
+	OnSelected.Broadcast(ButtonType);
+}
+
+void AWorldButton::EndPlay(EEndPlayReason::Type Reason)
+{
+	OnSelected.Clear();
 }

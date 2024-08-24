@@ -11,18 +11,23 @@ enum class EWorldButtonType : uint8
 {
 	None,
 	Play,
-	Options,
 	Quit,
 	LowQuality,
 	MediumQuality,
 	HighQuality
 };
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FWorldButtonTypeSignature, EWorldButtonType, OutType);
+
 UCLASS()
 class SHASTA_API AWorldButton : public AActor
 {
 	GENERATED_BODY()
 	
+public:
+	UPROPERTY(BlueprintAssignable)
+	FWorldButtonTypeSignature OnSelected;
+
 private:
 	UPROPERTY(EditAnywhere)
 	EWorldButtonType ButtonType = EWorldButtonType::None;
@@ -32,5 +37,8 @@ private:
 
 public:	
 	AWorldButton();
-	void DoTheThing();
+	void Interact();
+
+private:
+	void EndPlay(EEndPlayReason::Type Reason) override;
 };
