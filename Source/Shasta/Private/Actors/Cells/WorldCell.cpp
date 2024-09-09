@@ -447,6 +447,9 @@ void AWorldCell::EndPlay(EEndPlayReason::Type EndPlayReason)
 	Super::EndPlay(EndPlayReason);
 
 	GetWorld()->GetTimerManager().ClearTimer(EnemySpawnTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(CooldownTimerHandle);
+	GetWorld()->GetTimerManager().ClearTimer(LifeTimeTimerHandle);
+	GetWorld()->GetTimerManager().ClearAllTimersForObject(this);
 }
 
 bool AWorldCell::RequestChange(bool ForceChange)

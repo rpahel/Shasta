@@ -38,6 +38,7 @@ void UInteractionComponent::BeginPlay()
 	params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AlwaysSpawn;
 
 	ModifierSelector = GetWorld()->SpawnActor<AModifierSelector>(ModifierSelectorTemplate, params);
+	ModifierSelector->SetActorLocation(FVector(0, 0, -10000));
 	ModifierSelector->SetActorHiddenInGame(true);
 	ModifierSelector->SetOwnerActor(GetOwner());
 }
